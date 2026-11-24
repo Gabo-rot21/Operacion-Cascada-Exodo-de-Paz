@@ -1,0 +1,2504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OPERACIÓN CASCADA: Éxodo de Paz</title>
+    <style>
+        /* =====================================================================
+           ESTILOS AUTOCONTENIDOS (SIN DEPENDENCIAS EXTERNAS)
+           ===================================================================== */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #04060c;
+            color: #f8fafc;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+        #game-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .cinematic-vignette {
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 52%, rgba(2, 4, 10, 0.85) 100%);
+            z-index: 20;
+        }
+        .hidden { display: none !important; }
+
+        /* HUD SUPERIOR */
+        #hud {
+            position: relative;
+            z-index: 30;
+            background: rgba(8, 12, 24, 0.92);
+            border-bottom: 1px solid rgba(251, 191, 36, 0.35);
+            padding: 8px 12px;
+            backdrop-filter: blur(8px);
+        }
+        .hud-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .hud-pill {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 12px;
+            padding: 5px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .hud-pill-cyan { border-color: rgba(56, 189, 248, 0.55); }
+        .hud-pill-emerald { border-color: rgba(52, 211, 153, 0.6); }
+        .hud-pill-amber { border-color: rgba(251, 191, 36, 0.6); }
+        .hud-pill-rose { border-color: rgba(244, 63, 94, 0.65); }
+
+        .hud-sub {
+            font-size: 10px;
+            font-weight: 800;
+            color: #fbbf24;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .hud-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #ffffff;
+        }
+        .hud-stat {
+            font-size: 13px;
+            font-weight: 800;
+        }
+        .bar-wrap {
+            width: 96px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .bar-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            font-weight: 800;
+        }
+        .bar-track {
+            width: 100%;
+            height: 7px;
+            background: #1e293b;
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f43f5e, #10b981);
+            transition: width 0.15s ease;
+        }
+        .bar-fill-convoy {
+            background: linear-gradient(90deg, #f59e0b, #38bdf8);
+        }
+
+        /* BOTONES */
+        .btn {
+            border: none;
+            border-radius: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.12s ease, filter 0.15s ease, background 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 10px; }
+        .btn-amber { background: #fbbf24; color: #090d16; }
+        .btn-amber:hover { filter: brightness(1.08); }
+        .btn-dark { background: #1e293b; color: #f8fafc; border: 1px solid #475569; }
+        .btn-dark:hover { background: #334155; }
+        .btn-hero-cta {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 17px;
+            background: linear-gradient(90deg, #fbbf24, #fb923c, #34d399);
+            color: #050811;
+            box-shadow: 0 10px 25px rgba(251, 191, 36, 0.3);
+        }
+        .btn-hero-cta:hover { filter: brightness(1.08); }
+        .btn-outline-cyan {
+            width: 100%;
+            padding: 11px 16px;
+            font-size: 14px;
+            background: rgba(15, 23, 42, 0.9);
+            color: #67e8f9;
+            border: 1px solid rgba(34, 211, 238, 0.6);
+        }
+        .btn-outline-cyan:hover { background: rgba(30, 41, 59, 0.95); }
+
+        /* AVISO TÁCTICO FLOTANTE */
+        #banner-msg {
+            pointer-events: none;
+            position: fixed;
+            top: 66px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 45;
+            background: rgba(9, 13, 24, 0.94);
+            border: 2px solid #fbbf24;
+            color: #ffffff;
+            padding: 8px 18px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 13px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            max-width: 92vw;
+        }
+
+        /* CONTROLES TÁCTILES EN PANTALLA */
+        #touch-controls {
+            position: fixed;
+            bottom: 14px;
+            left: 14px;
+            right: 14px;
+            z-index: 35;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+        .touch-group {
+            display: flex;
+            gap: 8px;
+            pointer-events: auto;
+            align-items: flex-end;
+        }
+        .t-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: rgba(9, 13, 24, 0.84);
+            border: 2px solid rgba(56, 189, 248, 0.7);
+            color: #7dd3fc;
+            font-size: 20px;
+            font-weight: 800;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.65);
+        }
+        .t-btn span.sub { font-size: 9px; margin-top: 1px; }
+        .t-btn-amber { border-color: rgba(251, 191, 36, 0.75); color: #fcd34d; }
+        .t-btn-emerald { border-color: rgba(52, 211, 153, 0.75); color: #6ee7b7; }
+        .t-btn-action {
+            width: auto;
+            padding: 0 16px;
+            background: linear-gradient(135deg, #fbbf24, #34d399);
+            border: 2px solid #ffffff;
+            color: #050811;
+            font-size: 14px;
+            flex-direction: row;
+            gap: 6px;
+        }
+
+        /* MODALES Y PANTALLAS */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background: rgba(4, 6, 14, 0.86);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            overflow-y: auto;
+        }
+        .aaa-panel {
+            width: 100%;
+            max-width: 680px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.97) 0%, rgba(8, 12, 24, 0.99) 100%);
+            border: 2px solid rgba(251, 191, 36, 0.8);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 22px 55px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            animation: popIn 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            max-height: 94vh;
+            overflow-y: auto;
+        }
+        .aaa-panel-sm { max-width: 440px; }
+        @keyframes popIn {
+            0% { transform: scale(0.92); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes alertPulse {
+            0%, 100% { box-shadow: 0 0 8px rgba(244, 63, 94, 0.35); }
+            50% { box-shadow: 0 0 22px rgba(244, 63, 94, 0.95); }
+        }
+        .alert-glow { animation: alertPulse 0.75s infinite; }
+
+        /* GRIDS DE SELECCIÓN */
+        .badge-ods {
+            display: inline-block;
+            background: rgba(251, 191, 36, 0.14);
+            border: 1px solid rgba(251, 191, 36, 0.55);
+            color: #fcd34d;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 999px;
+            margin-bottom: 6px;
+        }
+        .game-title {
+            font-size: clamp(26px, 5vw, 40px);
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, #fcd34d, #fb923c, #67e8f9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+        .section-lbl {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #67e8f9;
+            margin-bottom: 6px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        @media (max-width: 560px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+        .card-select {
+            background: rgba(9, 13, 24, 0.88);
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 10px;
+            text-align: left;
+            color: #f8fafc;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .card-select.active {
+            background: rgba(120, 53, 15, 0.45);
+            border-color: #fbbf24;
+            box-shadow: 0 0 18px rgba(251, 191, 36, 0.22);
+        }
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .tag-role {
+            font-size: 9px;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: #050811;
+        }
+        .diff-btn {
+            background: #1e293b;
+            color: #cbd5e1;
+            border: 1px solid #334155;
+            border-radius: 11px;
+            padding: 8px 4px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+        }
+        .diff-btn.active {
+            background: #fbbf24;
+            color: #050811;
+            border-color: #fef08a;
+        }
+        .diff-btn.active-extreme {
+            background: #f43f5e;
+            color: #ffffff;
+            border-color: #fda4af;
+        }
+        select.mission-dropdown {
+            width: 100%;
+            background: #090d16;
+            border: 1px solid #475569;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 9px 10px;
+            border-radius: 11px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* MINIJUEGO DE HACKEO Y SINTONIZACIÓN DE ONDAS */
+        .hack-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .hack-node {
+            background: #1e293b;
+            border: 2px solid #38bdf8;
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 900;
+            padding: 14px 0;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+        .hack-node.done {
+            background: #10b981;
+            border-color: #ffffff;
+            color: #050811;
+        }
+        input[type="range"].wave-slider {
+            width: 100%;
+            accent-color: #38bdf8;
+            height: 28px;
+            cursor: pointer;
+        }
+
+        /* INFORME FINAL */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            background: #090d16;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 10px;
+            margin: 12px 0;
+        }
+        .stat-box-lbl { font-size: 9px; color: #94a3b8; font-weight: 800; }
+        .stat-box-val { font-size: 14px; font-weight: 900; margin-top: 2px; }
+        .ods-box {
+            background: rgba(8, 51, 68, 0.55);
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            border-radius: 14px;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: #cffafe;
+            line-height: 1.45;
+            margin-bottom: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="cinematic-vignette"></div>
+
+    <!-- HUD TÁCTICO SUPERIOR -->
+    <header id="hud" class="hidden">
+        <div class="hud-inner">
+            <!-- Misión y Héroe -->
+            <div class="hud-pill hud-pill-cyan">
+                <span id="hud-hero-icon" style="font-size:20px;">🏃🏽‍♂️</span>
+                <div>
+                    <div class="hud-sub">Misión <span id="hud-lvl-num">1</span>/6 · <span id="hud-diff-tag">TÁCTICO</span></div>
+                    <div id="hud-lvl-name" class="hud-title">Corredor de Fuego</div>
+                </div>
+            </div>
+
+            <!-- Indicadores Centrales -->
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;">
+                <!-- Civiles / Delegados Salvados -->
+                <div class="hud-pill hud-pill-emerald" title="Personas a salvo">
+                    <span>🕊️</span>
+                    <span id="hud-civ-text" class="hud-stat" style="color:#6ee7b7;">0/3</span>
+                </div>
+
+                <!-- Objetivo Específico de Misión -->
+                <div class="hud-pill hud-pill-amber" title="Objetivo táctico">
+                    <span id="hud-obj-icon">🚧</span>
+                    <span id="hud-obj-text" class="hud-stat" style="color:#fcd34d;">0/2</span>
+                </div>
+
+                <!-- Temporizador (Misión 2 u otros) -->
+                <div id="hud-timer-pill" class="hud-pill hud-pill-rose hidden" title="Tiempo restante">
+                    <span>⏱️</span>
+                    <span id="hud-timer-text" class="hud-stat" style="color:#fda4af;">90s</span>
+                </div>
+
+                <!-- Integridad del Convoy (Misión 4) -->
+                <div id="hud-convoy-bar" class="bar-wrap hidden">
+                    <div class="bar-top">
+                        <span style="color:#7dd3fc;">🚚 Convoy</span>
+                        <span id="hud-convoy-val">100%</span>
+                    </div>
+                    <div class="bar-track">
+                        <div id="hud-convoy-fill" class="bar-fill bar-fill-convoy" style="width:100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Salud / Escudo del Héroe -->
+                <div class="bar-wrap">
+                    <div class="bar-top">
+                        <span style="color:#fda4af;">❤️ Escudo</span>
+                        <span id="hud-hp-val">100%</span>
+                    </div>
+                    <div class="bar-track">
+                        <div id="hud-hp-fill" class="bar-fill" style="width:100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Nivel de Alerta 1 a 4 Estrellas -->
+                <div id="hud-alert-box" class="hud-pill" title="Nivel de Alerta (1-4)">
+                    <span id="alert-1" style="opacity:0.22; font-size:13px;">⭐</span>
+                    <span id="alert-2" style="opacity:0.22; font-size:13px;">⭐</span>
+                    <span id="alert-3" style="opacity:0.22; font-size:13px;">⭐</span>
+                    <span id="alert-4" style="opacity:0.22; font-size:13px;">⭐</span>
+                </div>
+            </div>
+
+            <!-- Controles de Ayuda y Audio -->
+            <div style="display:flex; gap:6px;">
+                <button onclick="openHowToPlay()" class="btn btn-sm btn-amber">❓ Guía</button>
+                <button id="btn-audio" onclick="toggleAudio()" class="btn btn-sm btn-dark" title="Audio">🔊</button>
+                <button onclick="backToMainMenu()" class="btn btn-sm btn-dark" title="Menú">🏠</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ÁREA DE RENDERIZADO 2.5D -->
+    <main id="game-wrapper">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- BANNER TÁCTICO RÁPIDO -->
+        <div id="banner-msg" class="hidden">¡Aviso!</div>
+
+        <!-- CONTROLES TÁCTILES EN PANTALLA -->
+        <div id="touch-controls" class="hidden">
+            <div class="touch-group">
+                <button id="ctrl-left" class="t-btn">◀</button>
+                <button id="ctrl-right" class="t-btn">▶</button>
+            </div>
+            <div class="touch-group">
+                <button id="ctrl-crouch" class="t-btn t-btn-amber">
+                    <span>▼</span><span class="sub">Agachar</span>
+                </button>
+                <button id="ctrl-jump" class="t-btn t-btn-emerald">
+                    <span>▲</span><span class="sub">2x Salto</span>
+                </button>
+                <button id="ctrl-action" class="t-btn t-btn-action">
+                    <span>🤝</span><span id="action-label">Acción (E)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- =======================================================================
+             1. MENÚ PRINCIPAL (SELECCIÓN DE HÉROE, DIFICULTAD Y 6 MISIONES)
+             ======================================================================= -->
+        <div id="menu-screen" class="modal-backdrop">
+            <div class="aaa-panel">
+                <div style="text-align:center;">
+                    <span class="badge-ods">🕊️ ODS 16 · PAZ, JUSTICIA E INSTITUCIONES SÓLIDAS</span>
+                    <h1 class="game-title">OPERACIÓN CASCADA</h1>
+                    <p class="subtitle">Éxodo de Paz · Rescata civiles, desactiva amenazas y negocia el alto el fuego</p>
+                </div>
+
+                <!-- 1. Héroes de piel marrón con pañuelo azul -->
+                <div class="section-lbl">1. Elige tu especialista humanitario:</div>
+                <div class="grid-3">
+                    <div id="hero-tariq" onclick="selectHero('tariq')" class="card-select active">
+                        <div class="card-top">
+                            <span style="font-size:20px;">🏃🏽‍♂️</span>
+                            <span class="tag-role" style="background:#fbbf24;">PARKOUR</span>
+                        </div>
+                        <div style="font-weight:800; font-size:13px;">Tariq</div>
+                        <div style="font-size:11px; color:#fde68a; margin-top:2px;">+18% velocidad, doble salto extra alto y desliza más lejos.</div>
+                    </div>
+
+                    <div id="hero-amara" onclick="selectHero('amara')" class="card-select">
+                        <div class="card-top">
+                            <span style="font-size:20px;">👩🏽‍⚕️</span>
+                            <span class="tag-role" style="background:#34d399;">MÉDICA</span>
+                        </div>
+                        <div style="font-weight:800; font-size:13px;">Amara</div>
+                        <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">Cura heridos al instante (sin esperar 1.2s) y regenera escudo.</div>
+                    </div>
+
+                    <div id="hero-malik" onclick="selectHero('malik')" class="card-select">
+                        <div class="card-top">
+                            <span style="font-size:20px;">👨🏽‍🔧</span>
+                            <span class="tag-role" style="background:#38bdf8;">INGENIERO</span>
+                        </div>
+                        <div style="font-weight:800; font-size:13px;">Malik</div>
+                        <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">Desactiva minas y hackea generadores el doble de rápido.</div>
+                    </div>
+                </div>
+
+                <!-- 2. Dificultad y Selector de las 6 Misiones -->
+                <div class="grid-2">
+                    <div>
+                        <div class="section-lbl">2. Nivel de Desafío:</div>
+                        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px;">
+                            <button id="diff-tactico" onclick="selectDifficulty('tactico')" class="diff-btn active">🛡️ Táctico</button>
+                            <button id="diff-veterano" onclick="selectDifficulty('veterano')" class="diff-btn">🔥 Veterano</button>
+                            <button id="diff-extremo" onclick="selectDifficulty('extremo')" class="diff-btn">💀 Extremo</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="section-lbl">3. Modo Campaña o Misión Libre:</div>
+                        <select id="mission-select" class="mission-dropdown">
+                            <option value="0">🚀 Campaña Completa (Desde Misión 1)</option>
+                            <option value="0">1. 🔥 Corredor de Fuego (Evasión y Morteros)</option>
+                            <option value="1">2. 🌉 El Puente Colapsado (Parkour 90s)</option>
+                            <option value="2">3. 🏥 Apagón en el Hospital (Linterna y Hackeo)</option>
+                            <option value="3">4. 🚚 El Convoy Humanitario (Escolta Móvil)</option>
+                            <option value="4">5. 📡 Torre de Radio Pirata (Ascenso y Ondas)</option>
+                            <option value="5">6. 🕊️ Cumbre del Alto el Fuego (Diplomacia Final)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button onclick="startComicIntro()" class="btn btn-hero-cta">▶️ INICIAR OPERACIÓN</button>
+                    <button onclick="openHowToPlay()" class="btn btn-outline-cyan">🎮 CÓMO SE JUEGA Y PELIGROS TÁCTICOS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- =======================================================================
+             2. GUÍA VISUAL 'CÓMO SE JUEGA'
+             ======================================================================= -->
+        <div id="howto-modal" class="modal-backdrop hidden">
+            <div class="aaa-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h2 style="font-size:20px; font-weight:900; color:#67e8f9;">🎮 MANUAL DE CAMPO</h2>
+                    <button onclick="closeHowToPlay()" class="btn btn-sm btn-dark">✕ Cerrar</button>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; text-align:center;">
+                    <div class="card-select" style="text-align:center; cursor:default;">
+                        <div style="font-size:20px;">⬅️ ➡️</div>
+                        <div style="font-size:11px; font-weight:800; color:#67e8f9;">A / D</div>
+                        <div style="font-size:10px; color:#94a3b8;">Correr</div>
+                    </div>
+                    <div class="card-select" style="text-align:center; cursor:default;">
+                        <div style="font-size:20px;">⬆️⬆️</div>
+                        <div style="font-size:11px; font-weight:800; color:#6ee7b7;">W / Espacio</div>
+                        <div style="font-size:10px; color:#94a3b8;">Doble Salto</div>
+                    </div>
+                    <div class="card-select" style="text-align:center; cursor:default;">
+                        <div style="font-size:20px;">⬇️💨</div>
+                        <div style="font-size:11px; font-weight:800; color:#fcd34d;">S / Abajo</div>
+                        <div style="font-size:10px; color:#94a3b8;">Agachar / Deslizar</div>
+                    </div>
+                    <div class="card-select" style="text-align:center; cursor:default;">
+                        <div style="font-size:20px;">🤝</div>
+                        <div style="font-size:11px; font-weight:800; color:#fda4af;">Mantener E</div>
+                        <div style="font-size:10px; color:#94a3b8;">Curar / Hackear</div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="font-size:12px;">
+                    <div class="card-select" style="cursor:default; border-color:#f43f5e;">
+                        <strong style="color:#fda4af;">💥 Morteros y Drones Dobles:</strong>
+                        <p style="color:#cbd5e1; margin-top:4px;">Si ves una marca roja parpadeando en el suelo, ¡sal de ahí antes de 1.8s! Salta sobre drones bajos y agáchate bajo drones medios.</p>
+                    </div>
+                    <div class="card-select" style="cursor:default; border-color:#34d399;">
+                        <strong style="color:#6ee7b7;">🩹 Civiles Heridos (Mantener E):</strong>
+                        <p style="color:#cbd5e1; margin-top:4px;">Algunos civiles tienen icono 🩹: mantén pulsado <b>E</b> (o el botón Acción) 1.2s para curarlos antes de que te sigan al refugio.</p>
+                    </div>
+                </div>
+
+                <button onclick="closeHowToPlay()" class="btn btn-hero-cta" style="font-size:15px; padding:12px;">¡ENTENDIDO, EN MARCHA! 🚀</button>
+            </div>
+        </div>
+
+        <!-- =======================================================================
+             3. INTRO CÓMIC (3 VIÑETAS RÁPIDAS SALTABLES)
+             ======================================================================= -->
+        <div id="comic-modal" class="modal-backdrop hidden">
+            <div class="aaa-panel aaa-panel-sm" style="padding:0; overflow:hidden;">
+                <div style="position:relative; width:100%; height:200px; background:#050811; border-bottom:1px solid rgba(251,191,36,0.4);">
+                    <canvas id="comicCanvas" style="width:100%; height:100%;"></canvas>
+                    <span id="comic-badge" style="position:absolute; top:10px; right:10px; background:rgba(5,8,17,0.9); border:1px solid #fbbf24; color:#fcd34d; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:800;">1 / 3</span>
+                </div>
+                <div style="padding:18px; text-align:center;">
+                    <h3 id="comic-title" style="font-size:18px; font-weight:900; color:#fcd34d; margin-bottom:6px;"></h3>
+                    <p id="comic-text" style="font-size:13px; color:#e2e8f0; line-height:1.45; margin-bottom:14px;"></p>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="skipComicIntro()" class="btn btn-dark" style="padding:10px 14px; font-size:13px;">Saltar</button>
+                        <button id="comic-next-btn" onclick="nextComicPanel()" class="btn btn-hero-cta" style="font-size:14px; padding:10px;">Siguiente ➡️</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =======================================================================
+             4. MINIJUEGO DE HACKEO DE SECUENCIA (MISIÓN 3: GENERADORES HOSPITAL)
+             ======================================================================= -->
+        <div id="hack-modal" class="modal-backdrop hidden">
+            <div class="aaa-panel aaa-panel-sm" style="text-align:center; border-color:#38bdf8;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="background:rgba(56,189,248,0.2); color:#7dd3fc; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:800;">⚡ GENERADOR HOSPITAL</span>
+                    <span id="hack-timer" style="font-size:13px; font-weight:900; color:#fb7185;">⏱️ 8.0s</span>
+                </div>
+                <h3 style="font-size:16px; font-weight:900;">Pulsa los nodos en orden (1 → 6)</h3>
+                <p style="font-size:11px; color:#94a3b8;">Restaura la energía médica sin activar la alarma</p>
+                <div id="hack-grid" class="hack-grid"></div>
+            </div>
+        </div>
+
+        <!-- =======================================================================
+             5. MINIJUEGO DE SINTONIZACIÓN DE ONDAS (MISIÓN 5: TORRE DE RADIO)
+             ======================================================================= -->
+        <div id="radio-modal" class="modal-backdrop hidden">
+            <div class="aaa-panel aaa-panel-sm" style="text-align:center; border-color:#34d399;">
+                <span style="background:rgba(52,211,153,0.2); color:#6ee7b7; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:800;">📡 FRECUENCIA DE PAZ</span>
+                <h3 style="font-size:16px; font-weight:900; margin-top:6px;">Alinea la onda verde con la blanca</h3>
+                <p style="font-size:11px; color:#94a3b8; margin-bottom:10px;">Emite el mensaje de alto el fuego a toda la ciudad</p>
+                <canvas id="waveCanvas" width="360" height="110" style="width:100%; height:110px; background:#050811; border-radius:12px; border:1px solid #334155; margin-bottom:10px;"></canvas>
+                <input id="wave-slider" type="range" min="10" max="90" value="20" class="wave-slider" />
+                <div id="wave-status" style="font-size:12px; font-weight:800; color:#fcd34d; margin:6px 0 10px;">Señal: 0%</div>
+                <button onclick="confirmRadioSignal()" class="btn btn-hero-cta" style="font-size:14px; padding:10px;">📡 EMITIR ALTO EL FUEGO</button>
+            </div>
+        </div>
+
+        <!-- =======================================================================
+             6. DIÁLOGO DIPLOMÁTICO FINAL (MISIÓN 6: CUMBRE DE PAZ)
+             ======================================================================= -->
+        <div id="treaty-modal" class="modal-backdrop hidden">
+            <div class="aaa-panel aaa-panel-sm" style="border-color:#fbbf24;">
+                <span class="badge-ods">🕊️ MESA DE NEGOCIACIÓN · ODS 16</span>
+                <h3 style="font-size:17px; font-weight:900; margin-bottom:6px;">Firma del Acuerdo de Alto el Fuego</h3>
+                <p id="treaty-prompt" style="font-size:13px; color:#e2e8f0; background:#090d16; padding:10px; border-radius:12px; border:1px solid #334155; margin-bottom:10px;">
+                    Ambos delegados están en la mesa. ¿Qué cláusula priorizas para garantizar una paz duradera?
+                </p>
+                <div id="treaty-choices" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+        </div>
+
+        <!-- =======================================================================
+             7. INFORME DE IMPACTO ODS 16 (FIN DE MISIÓN / CAMPAÑA)
+             ======================================================================= -->
+        <div id="end-modal" class="modal-backdrop hidden">
+            <div class="aaa-panel aaa-panel-sm" style="text-align:center; border-color:#34d399;">
+                <div id="end-rank" style="display:inline-block; background:linear-gradient(90deg,#fcd34d,#f59e0b); color:#050811; font-weight:900; font-size:24px; padding:5px 18px; border-radius:14px; margin-bottom:8px;">
+                    RANGO S · HÉROE DE LA PAZ
+                </div>
+                <h2 id="end-title" style="font-size:22px; font-weight:900; color:#6ee7b7; margin-bottom:4px;">¡MISIÓN COMPLETADA!</h2>
+                <p id="end-desc" style="font-size:12px; color:#cbd5e1;">Corredor humanitario asegurado sin recurrir a la violencia.</p>
+
+                <div class="stats-row">
+                    <div>
+                        <div class="stat-box-lbl">SALVADOS</div>
+                        <div id="stat-saved" class="stat-box-val" style="color:#6ee7b7;">3/3</div>
+                    </div>
+                    <div>
+                        <div class="stat-box-lbl">TIEMPO</div>
+                        <div id="stat-time" class="stat-box-val" style="color:#67e8f9;">01:12</div>
+                    </div>
+                    <div>
+                        <div class="stat-box-lbl">ALERTAS</div>
+                        <div id="stat-alerts" class="stat-box-val" style="color:#fcd34d;">0</div>
+                    </div>
+                    <div>
+                        <div class="stat-box-lbl">ESCUDO</div>
+                        <div id="stat-hp" class="stat-box-val" style="color:#fda4af;">100%</div>
+                    </div>
+                </div>
+
+                <div id="end-ods-lesson" class="ods-box">
+                    🇺🇳 <strong>ODS 16:</strong> Proteger a la población civil, respetar hospitales y abrir vías de diálogo transforma el conflicto en paz sostenible.
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button id="btn-next-mission" onclick="proceedNextMission()" class="btn btn-hero-cta" style="font-size:15px; padding:12px;">
+                        ➡️ SIGUIENTE MISIÓN
+                    </button>
+                    <button onclick="backToMainMenu()" class="btn btn-dark" style="width:100%; padding:10px; font-size:13px;">
+                        🏠 VOLVER AL MENÚ PRINCIPAL
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        /**
+         * ============================================================================
+         * 1. MOTOR DE AUDIO PROCEDIMENTAL (WEB AUDIO API - SIN ARCHIVOS EXTERNOS)
+         * ============================================================================
+         */
+        const SoundFX = {
+            ctx: null,
+            muted: false,
+            musicTimer: null,
+            step: 0,
+            init() {
+                if (!this.ctx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (AC) this.ctx = new AC();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+            },
+            tone(freq, type, dur, vol = 0.06, delay = 0) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + delay);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.0008, this.ctx.currentTime + delay + dur);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + delay);
+                    osc.stop(this.ctx.currentTime + delay + dur);
+                } catch (e) {}
+            },
+            startTensionScore() {
+                if (this.musicTimer) clearInterval(this.musicTimer);
+                const bass = [98, 98, 116.54, 130.81, 87.31, 87.31, 116.54, 146.83];
+                this.musicTimer = setInterval(() => {
+                    if (this.muted || !game || game.mode !== 'playing') return;
+                    const f = bass[this.step % bass.length];
+                    this.tone(f, 'triangle', 0.28, 0.028, 0);
+                    if (this.step % 2 === 1) this.tone(f * 2, 'sine', 0.16, 0.016, 0.08);
+                    this.step++;
+                }, 310);
+            },
+            jump(isDouble = false) {
+                this.tone(isDouble ? 490 : 310, 'sine', 0.12, 0.07, 0);
+                this.tone(isDouble ? 720 : 480, 'sine', 0.14, 0.06, 0.05);
+            },
+            slide() { this.tone(155, 'sawtooth', 0.15, 0.04, 0); },
+            healTick() { this.tone(620, 'sine', 0.06, 0.035, 0); },
+            success() {
+                [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, 'triangle', 0.16, 0.08, i * 0.07));
+            },
+            mortarWarn() {
+                this.tone(880, 'square', 0.07, 0.03, 0);
+                this.tone(880, 'square', 0.07, 0.03, 0.14);
+            },
+            explosion() {
+                this.tone(72, 'sawtooth', 0.4, 0.09, 0);
+                this.tone(46, 'sine', 0.5, 0.1, 0.06);
+            },
+            alarm() {
+                this.tone(240, 'sawtooth', 0.16, 0.1, 0);
+                this.tone(170, 'sawtooth', 0.22, 0.1, 0.12);
+            }
+        };
+
+        function toggleAudio() {
+            SoundFX.muted = !SoundFX.muted;
+            document.getElementById('btn-audio').textContent = SoundFX.muted ? '🔇' : '🔊';
+        }
+
+        /**
+         * ============================================================================
+         * 2. SELECCIÓN DE HÉROES, DIFICULTAD E INTRO CÓMIC
+         * ============================================================================
+         */
+        let selectedHero = 'tariq';
+        let selectedDiff = 'tactico';
+        let campaignMode = true;
+
+        function selectHero(id) {
+            selectedHero = id;
+            ['tariq', 'amara', 'malik'].forEach(h => {
+                document.getElementById(`hero-${h}`).className =
+                    h === id ? 'card-select active' : 'card-select';
+            });
+            SoundFX.tone(540, 'sine', 0.06);
+        }
+
+        function selectDifficulty(diff) {
+            selectedDiff = diff;
+            ['tactico', 'veterano', 'extremo'].forEach(d => {
+                const btn = document.getElementById(`diff-${d}`);
+                if (d === diff) {
+                    btn.className = d === 'extremo' ? 'diff-btn active-extreme' : 'diff-btn active';
+                } else {
+                    btn.className = 'diff-btn';
+                }
+            });
+            SoundFX.tone(600, 'sine', 0.06);
+        }
+
+        const COMIC_PANELS = [
+            {
+                title: '1. Zona de Conflicto',
+                text: 'Los bombardeos han cortado las carreteras. Cientos de familias necesitan llegar al Corredor Humanitario.',
+                scene: 'war'
+            },
+            {
+                title: '2. Rescate y Primeros Auxilios',
+                text: 'Con tu pañuelo azul de paz, cura a los heridos (manteniendo E) y guíalos a través del humo y los drones.',
+                scene: 'medic'
+            },
+            {
+                title: '3. Rumbo al Alto el Fuego',
+                text: 'Restaura la energía del hospital, escolta el convoy y activa las balizas de tregua para lograr la paz.',
+                scene: 'peace'
+            }
+        ];
+
+        let comicIdx = 0;
+
+        function startComicIntro() {
+            SoundFX.init();
+            SoundFX.success();
+            const selVal = document.getElementById('mission-select').selectedIndex;
+            campaignMode = selVal === 0;
+            comicIdx = 0;
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('comic-modal').classList.remove('hidden');
+            renderComicPanel();
+        }
+
+        function renderComicPanel() {
+            const p = COMIC_PANELS[comicIdx];
+            document.getElementById('comic-badge').textContent = `${comicIdx + 1} / 3`;
+            document.getElementById('comic-title').textContent = p.title;
+            document.getElementById('comic-text').textContent = p.text;
+            document.getElementById('comic-next-btn').textContent =
+                comicIdx === 2 ? '🚀 ¡EMPEZAR MISIÓN!' : 'Siguiente ➡️';
+
+            const c = document.getElementById('comicCanvas');
+            const g = c.getContext('2d');
+            c.width = c.clientWidth || 440;
+            c.height = c.clientHeight || 200;
+            const w = c.width, h = c.height;
+
+            const grad = g.createLinearGradient(0, 0, 0, h);
+            grad.addColorStop(0, '#050811');
+            grad.addColorStop(0.65, p.scene === 'peace' ? '#064e3b' : '#451a03');
+            grad.addColorStop(1, '#020617');
+            g.fillStyle = grad;
+            g.fillRect(0, 0, w, h);
+
+            for (let i = 0; i < w; i += 44) {
+                const bh = 50 + ((i * 21) % 85);
+                g.fillStyle = '#0f172a';
+                g.fillRect(i, h - bh, 38, bh);
+            }
+            g.textAlign = 'center';
+            g.font = '46px sans-serif';
+            g.fillText(p.scene === 'war' ? '🔥🚁🏚️' : p.scene === 'medic' ? '🏃🏽‍♂️🩹👨‍👩‍👧' : '🇺🇳🕊️📡', w / 2, h / 2 + 16);
+        }
+
+        function nextComicPanel() {
+            SoundFX.tone(550, 'sine', 0.08);
+            comicIdx++;
+            if (comicIdx >= 3) skipComicIntro();
+            else renderComicPanel();
+        }
+
+        function skipComicIntro() {
+            document.getElementById('comic-modal').classList.add('hidden');
+            const startIdx = parseInt(document.getElementById('mission-select').value, 10) || 0;
+            launchMission(startIdx);
+        }
+
+        function openHowToPlay() {
+            SoundFX.tone(620, 'sine', 0.08);
+            document.getElementById('howto-modal').classList.remove('hidden');
+        }
+        function closeHowToPlay() {
+            SoundFX.tone(480, 'sine', 0.08);
+            document.getElementById('howto-modal').classList.add('hidden');
+        }
+
+        /**
+         * ============================================================================
+         * 3. DEFINICIÓN DE LAS 6 MISIONES RADICALMENTE DIFERENTES
+         * ============================================================================
+         */
+        function buildSixMissions(diff) {
+            const spd = diff === 'extremo' ? 1.45 : diff === 'veterano' ? 1.24 : 1.0;
+            const doublePatrol = diff === 'extremo';
+
+            return [
+                // -----------------------------------------------------------------------
+                // MISIÓN 1: CORREDOR DE FUEGO (Evasión horizontal, morteros y drones)
+                // -----------------------------------------------------------------------
+                {
+                    id: 1,
+                    type: 'corridor',
+                    name: 'Corredor de Fuego',
+                    objIcon: '🚧',
+                    worldW: 2350,
+                    worldH: 600,
+                    sky: ['#070a14', '#3b1008', '#7c2d12'],
+                    accent: '#fb923c',
+                    ash: true,
+                    mortarRate: diff === 'extremo' ? 2.1 : diff === 'veterano' ? 2.7 : 3.5,
+                    platforms: [
+                        { x: 280, y: 95, w: 165, h: 16 },
+                        { x: 620, y: 165, w: 175, h: 16 },
+                        { x: 1050, y: 110, w: 170, h: 16 },
+                        { x: 1480, y: 175, w: 185, h: 16 },
+                        { x: 1860, y: 115, w: 165, h: 16 }
+                    ],
+                    // Drones con doble patrón: 'mid' (agacharse) y 'low' (saltar)
+                    drones: [
+                        { x: 520, minX: 380, maxX: 740, pattern: 'mid', speed: 135 * spd, dir: 1 },
+                        { x: 1180, minX: 980, maxX: 1380, pattern: 'low', speed: 150 * spd, dir: -1 },
+                        { x: 1720, minX: 1540, maxX: 1920, pattern: 'mid', speed: 165 * spd, dir: 1 },
+                        ...(doublePatrol ? [{ x: 860, minX: 700, maxX: 1050, pattern: 'low', speed: 160 * spd, dir: 1 }] : [])
+                    ],
+                    civilians: [
+                        { id: 'c1', x: 350, y: 95, emoji: '👧🏽', name: 'Nadia', injured: false, healProgress: 1, state: 'waiting' },
+                        { id: 'c2', x: 1120, y: 110, emoji: '👴🏽', name: 'Abuelo Sam', injured: true, healProgress: 0, state: 'waiting' },
+                        { id: 'c3', x: 1930, y: 115, emoji: '👩🏽‍🍼', name: 'Sara', injured: false, healProgress: 1, state: 'waiting' }
+                    ],
+                    objectives: [
+                        { id: 'b1', x: 880, y: 0, done: false, icon: '🚧', label: 'Barricada despejada' },
+                        { id: 'b2', x: 1660, y: 0, done: false, icon: '🚧', label: 'Paso abierto' }
+                    ],
+                    shelterX: 2220,
+                    odsLesson: 'ODS 16.1: Reducir todas las formas de violencia y proteger a los civiles atrapados en zonas de conflicto es la prioridad de todo corredor humanitario.'
+                },
+
+                // -----------------------------------------------------------------------
+                // MISIÓN 2: EL PUENTE COLAPSADO (Parkour aéreo, plataformas que caen y 90s)
+                // -----------------------------------------------------------------------
+                {
+                    id: 2,
+                    type: 'bridge',
+                    name: 'El Puente Colapsado',
+                    objIcon: '⚙️',
+                    worldW: 2300,
+                    worldH: 600,
+                    sky: ['#050811', '#1e1b4b', '#4c1d95'],
+                    accent: '#38bdf8',
+                    ash: true,
+                    timeLimit: diff === 'extremo' ? 75 : 90,
+                    gaps: [
+                        { x1: 360, x2: 640 },
+                        { x1: 960, x2: 1280 },
+                        { x1: 1580, x2: 1900 }
+                    ],
+                    // crumbling: true -> tiembla 0.65s al pisarla y cae, regenerando a los 3s
+                    platforms: [
+                        { x: 390, y: 95, w: 110, h: 16, crumbling: true, timer: 0, fallen: false, respawn: 0 },
+                        { x: 525, y: 155, w: 110, h: 16, crumbling: false },
+                        { x: 760, y: 125, w: 150, h: 16, crumbling: false },
+                        { x: 990, y: 105, w: 120, h: 16, crumbling: true, timer: 0, fallen: false, respawn: 0 },
+                        { x: 1145, y: 170, w: 120, h: 16, crumbling: true, timer: 0, fallen: false, respawn: 0 },
+                        { x: 1380, y: 135, w: 150, h: 16, crumbling: false },
+                        { x: 1610, y: 110, w: 125, h: 16, crumbling: true, timer: 0, fallen: false, respawn: 0 },
+                        { x: 1765, y: 175, w: 125, h: 16, crumbling: false }
+                    ],
+                    drones: [
+                        { x: 820, minX: 680, maxX: 940, pattern: 'mid', speed: 145 * spd, dir: 1 },
+                        { x: 1450, minX: 1320, maxX: 1560, pattern: 'low', speed: 155 * spd, dir: -1 }
+                    ],
+                    civilians: [
+                        { id: 'c1', x: 575, y: 155, emoji: '👦🏽', name: 'Yusuf', injured: false, healProgress: 1, state: 'waiting' },
+                        { id: 'c2', x: 1440, y: 135, emoji: '👩🏽', name: 'Layla', injured: true, healProgress: 0, state: 'waiting' },
+                        { id: 'c3', x: 1820, y: 175, emoji: '👨🏽‍🦯', name: 'Omar', injured: false, healProgress: 1, state: 'waiting' }
+                    ],
+                    objectives: [
+                        { id: 'g1', x: 830, y: 125, done: false, icon: '⚙️', label: 'Cable tensor asegurado' },
+                        { id: 'g2', x: 1980, y: 0, done: false, icon: '⚙️', label: 'Rampa final bajada' }
+                    ],
+                    shelterX: 2180,
+                    odsLesson: 'ODS 16.6: Las infraestructuras civiles como puentes y rutas de evacuación deben mantenerse abiertas y seguras para garantizar el auxilio rápido.'
+                },
+
+                // -----------------------------------------------------------------------
+                // MISIÓN 3: APAGÓN EN EL HOSPITAL (Linterna direccional + 3 Generadores)
+                // -----------------------------------------------------------------------
+                {
+                    id: 3,
+                    type: 'hospital',
+                    name: 'Apagón en el Hospital',
+                    objIcon: '⚡',
+                    worldW: 2250,
+                    worldH: 600,
+                    sky: ['#02040a', '#06121e', '#082f49'],
+                    accent: '#22d3ee',
+                    dark: true,
+                    platforms: [
+                        { x: 260, y: 110, w: 180, h: 16 },
+                        { x: 660, y: 165, w: 190, h: 16 },
+                        { x: 1100, y: 115, w: 180, h: 16 },
+                        { x: 1540, y: 165, w: 190, h: 16 }
+                    ],
+                    // Torretas láser rítmicas
+                    turrets: [
+                        { x: 540, y: 0, h: 145, period: diff === 'extremo' ? 1.8 : 2.4, phase: 0 },
+                        { x: 1380, y: 0, h: 155, period: diff === 'extremo' ? 1.7 : 2.3, phase: 1.0 }
+                    ],
+                    drones: [
+                        { x: 920, minX: 740, maxX: 1080, pattern: 'mid', speed: 135 * spd, dir: 1 }
+                    ],
+                    civilians: [
+                        { id: 'c1', x: 340, y: 110, emoji: '👨🏽‍⚕️', name: 'Dr. Idris', injured: false, healProgress: 1, state: 'waiting' },
+                        { id: 'c2', x: 740, y: 165, emoji: '🤕', name: 'Paciente Lina', injured: true, healProgress: 0, state: 'waiting' },
+                        { id: 'c3', x: 1620, y: 165, emoji: '👩🏽‍⚕️', name: 'Enfermera Zuri', injured: false, healProgress: 1, state: 'waiting' }
+                    ],
+                    objectives: [
+                        { id: 'gen1', x: 460, y: 0, done: false, icon: '⚡', label: 'Generador Urgencias', hack: true },
+                        { id: 'gen2', x: 1180, y: 115, done: false, icon: '⚡', label: 'Generador Quirófano', hack: true },
+                        { id: 'gen3', x: 1860, y: 0, done: false, icon: '⚡', label: 'Generador Salida', hack: true }
+                    ],
+                    shelterX: 2120,
+                    odsLesson: 'Derecho Internacional Humanitario y ODS 16: Los hospitales y el personal sanitario son espacios protegidos; garantizar su energía salva vidas.'
+                },
+
+                // -----------------------------------------------------------------------
+                // MISIÓN 4: EL CONVOY HUMANITARIO (Escolta móvil con barra de integridad)
+                // -----------------------------------------------------------------------
+                {
+                    id: 4,
+                    type: 'convoy',
+                    name: 'El Convoy Humanitario',
+                    objIcon: '💣',
+                    worldW: 2500,
+                    worldH: 600,
+                    sky: ['#090d16', '#1e293b', '#334155'],
+                    accent: '#34d399',
+                    ash: true,
+                    convoyX: 140,
+                    convoyHp: 100,
+                    convoySpeed: diff === 'extremo' ? 88 : diff === 'veterano' ? 76 : 64,
+                    platforms: [
+                        { x: 420, y: 115, w: 170, h: 16 },
+                        { x: 960, y: 155, w: 180, h: 16 },
+                        { x: 1520, y: 115, w: 170, h: 16 },
+                        { x: 1980, y: 155, w: 180, h: 16 }
+                    ],
+                    drones: [
+                        { x: 820, minX: 620, maxX: 1020, pattern: 'mid', speed: 145 * spd, dir: 1 },
+                        { x: 1720, minX: 1480, maxX: 1940, pattern: 'low', speed: 160 * spd, dir: -1 }
+                    ],
+                    civilians: [
+                        { id: 'c1', x: 490, y: 115, emoji: '👧🏽', name: 'Amina', injured: false, healProgress: 1, state: 'waiting' },
+                        { id: 'c2', x: 1590, y: 115, emoji: '👴🏽', name: 'Don Mateo', injured: true, healProgress: 0, state: 'waiting' },
+                        { id: 'c3', x: 2050, y: 155, emoji: '👦🏽', name: 'Kofi', injured: false, healProgress: 1, state: 'waiting' }
+                    ],
+                    // Minas y barricadas que dañan al camión si no se desactivan antes
+                    objectives: [
+                        { id: 'm1', x: 640, y: 0, done: false, icon: '💣', label: 'Mina desactivada', hazard: true },
+                        { id: 'm2', x: 1180, y: 0, done: false, icon: '🚧', label: 'Barricada retirada', hazard: true },
+                        { id: 'm3', x: 1680, y: 0, done: false, icon: '💣', label: 'Mina desactivada', hazard: true },
+                        { id: 'm4', x: 2140, y: 0, done: false, icon: '📡', label: 'Inhibidor apagado', hazard: true }
+                    ],
+                    shelterX: 2370,
+                    odsLesson: 'ODS 16.3 y 16.b: El acceso sin obstáculos de la ayuda humanitaria es un principio de justicia internacional que protege a los más vulnerables.'
+                },
+
+                // -----------------------------------------------------------------------
+                // MISIÓN 5: TORRE DE RADIO PIRATA (Ascenso vertical + Gas ascendente + Ondas)
+                // -----------------------------------------------------------------------
+                {
+                    id: 5,
+                    type: 'tower',
+                    name: 'Torre de Radio Pirata',
+                    objIcon: '📡',
+                    worldW: 1150,
+                    worldH: 1550,
+                    sky: ['#04060e', '#1e1b4b', '#312e81'],
+                    accent: '#c084fc',
+                    gasY: -120,
+                    gasSpeed: diff === 'extremo' ? 42 : diff === 'veterano' ? 32 : 22,
+                    platforms: [
+                        { x: 140, y: 120, w: 230, h: 16 },
+                        { x: 540, y: 235, w: 240, h: 16 },
+                        { x: 190, y: 360, w: 230, h: 16 },
+                        { x: 580, y: 490, w: 240, h: 16 },
+                        { x: 220, y: 625, w: 230, h: 16 },
+                        { x: 560, y: 760, w: 250, h: 16 },
+                        { x: 180, y: 900, w: 240, h: 16 },
+                        { x: 520, y: 1040, w: 260, h: 16 },
+                        { x: 320, y: 1190, w: 460, h: 20 } // Azotea de antena
+                    ],
+                    turrets: [
+                        { x: 490, y: 251, h: 115, period: diff === 'extremo' ? 1.8 : 2.5, phase: 0 },
+                        { x: 510, y: 506, h: 125, period: diff === 'extremo' ? 1.7 : 2.3, phase: 0.9 },
+                        { x: 480, y: 776, h: 130, period: diff === 'extremo' ? 1.6 : 2.2, phase: 1.5 }
+                    ],
+                    civilians: [
+                        { id: 'c1', x: 640, y: 235, emoji: '👩🏽‍💻', name: 'Técnica Maya', injured: false, healProgress: 1, state: 'waiting' },
+                        { id: 'c2', x: 280, y: 625, emoji: '👨🏽‍🦱', name: 'Locutor Tariq Jr.', injured: true, healProgress: 0, state: 'waiting' }
+                    ],
+                    objectives: [
+                        { id: 'ant_main', x: 540, y: 1190, done: false, icon: '📡', label: 'Frecuencia de Paz emitida', radio: true }
+                    ],
+                    shelterX: 700,
+                    shelterY: 1190,
+                    odsLesson: 'ODS 16.10: Garantizar el acceso público a la información y proteger las libertades fundamentales permite difundir mensajes de paz frente a la desinformación.'
+                },
+
+                // -----------------------------------------------------------------------
+                // MISIÓN 6: CUMBRE DEL ALTO EL FUEGO (Escolta delegados + Balizas + Firma)
+                // -----------------------------------------------------------------------
+                {
+                    id: 6,
+                    type: 'summit',
+                    name: 'Cumbre del Alto el Fuego',
+                    objIcon: '🕊️',
+                    worldW: 2450,
+                    worldH: 600,
+                    sky: ['#030712', '#172554', '#065f46'],
+                    accent: '#fbbf24',
+                    ash: true,
+                    mortarRate: diff === 'extremo' ? 2.2 : diff === 'veterano' ? 2.8 : 3.8,
+                    platforms: [
+                        { x: 280, y: 110, w: 180, h: 16 },
+                        { x: 680, y: 180, w: 190, h: 16 },
+                        { x: 1120, y: 115, w: 180, h: 16 },
+                        { x: 1560, y: 180, w: 190, h: 16 },
+                        { x: 1940, y: 115, w: 180, h: 16 }
+                    ],
+                    turrets: [
+                        { x: 560, y: 0, h: 150, period: diff === 'extremo' ? 1.8 : 2.4, phase: 0 },
+                        { x: 1420, y: 0, h: 150, period: diff === 'extremo' ? 1.7 : 2.3, phase: 1.1 }
+                    ],
+                    drones: [
+                        { x: 960, minX: 780, maxX: 1160, pattern: 'mid', speed: 155 * spd, dir: 1 },
+                        { x: 1820, minX: 1640, maxX: 2020, pattern: 'low', speed: 165 * spd, dir: -1 }
+                    ],
+                    // 2 Delegados de paz que deben llegar a la mesa de negociación
+                    civilians: [
+                        { id: 'del1', x: 350, y: 110, emoji: '👩🏽‍⚖️', name: 'Delegada Sira', injured: false, healProgress: 1, state: 'waiting' },
+                        { id: 'del2', x: 1190, y: 115, emoji: '👨🏽‍💼', name: 'Mediador Kael', injured: true, healProgress: 0, state: 'waiting' }
+                    ],
+                    objectives: [
+                        { id: 'bz1', x: 770, y: 180, done: false, icon: '🕊️', label: 'Baliza Norte activa' },
+                        { id: 'bz2', x: 1650, y: 180, done: false, icon: '🕊️', label: 'Baliza Sur activa' },
+                        { id: 'table', x: 2290, y: 0, done: false, icon: '📜', label: 'Tratado firmado', treaty: true }
+                    ],
+                    shelterX: 2320,
+                    odsLesson: 'ODS 16.7 y 16.8: Las decisiones inclusivas, participativas y representativas mediante el diálogo diplomático ponen fin a las guerras y consolidan la paz.'
+                }
+            ];
+        }
+
+        /**
+         * ============================================================================
+         * 4. MOTOR DE JUEGO 2.5D, FÍSICAS Y ESTADOS
+         * ============================================================================
+         */
+        let game = null;
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function createGame(startIdx) {
+            const isTariq = selectedHero === 'tariq';
+            const maxHp = selectedDiff === 'extremo' ? 70 : 100;
+
+            return {
+                mode: 'playing',
+                hero: selectedHero,
+                diff: selectedDiff,
+                lvlIdx: startIdx,
+                missions: buildSixMissions(selectedDiff),
+                hp: maxHp,
+                maxHp,
+                alert: 0,
+                alertDecay: 0,
+                totalAlerts: 0,
+                totalSaved: 0,
+                elapsed: 0,
+                time: 0,
+                shake: 0,
+                slowMo: 0,
+                camX: 0,
+                camY: 0,
+                holdingAction: false,
+                mortarTimer: 2.2,
+                mortars: [], // { x, timer, maxTimer }
+                player: {
+                    x: 90,
+                    y: 0,
+                    vy: 0,
+                    h: 66,
+                    normalH: 66,
+                    crouchH: 34,
+                    speed: isTariq ? 395 : 335,
+                    jumpForce: isTariq ? 625 : 570,
+                    gravity: 1500,
+                    grounded: true,
+                    jumpsLeft: 2,
+                    crouching: false,
+                    slideTimer: 0,
+                    facing: 1,
+                    walkAnim: 0,
+                    scarf: [],
+                    invuln: 0
+                },
+                keys: { left: false, right: false, down: false },
+                particles: [],
+                embers: Array.from({ length: 80 }, () => ({
+                    x: Math.random() * 2500,
+                    y: Math.random() * 600,
+                    r: 1 + Math.random() * 2.4,
+                    vx: -28 - Math.random() * 35,
+                    vy: 22 + Math.random() * 42,
+                    hot: Math.random() < 0.48
+                })),
+                choppers: [
+                    { x: 350, y: 92, speed: 46, dir: 1 },
+                    { x: 1550, y: 120, speed: 38, dir: -1 }
+                ]
+            };
+        }
+
+        function resizeCanvas() {
+            const wrap = document.getElementById('game-wrapper');
+            canvas.width = wrap.clientWidth;
+            canvas.height = wrap.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function launchMission(idx) {
+            game = createGame(idx);
+            SoundFX.startTensionScore();
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('touch-controls').classList.remove('hidden');
+            setupMission(idx);
+        }
+
+        function setupMission(idx) {
+            game.lvlIdx = idx;
+            const m = game.missions[idx];
+            const p = game.player;
+            p.x = 90;
+            p.y = 0;
+            p.vy = 0;
+            p.grounded = true;
+            p.jumpsLeft = 2;
+            p.crouching = false;
+            p.slideTimer = 0;
+            p.scarf = [];
+            game.alert = 0;
+            game.camX = 0;
+            game.camY = 0;
+            game.mortars = [];
+            game.mortarTimer = 2.0;
+            game.holdingAction = false;
+
+            updateHUD();
+            const briefings = [
+                '🔥 Misión 1: ¡Esquiva los morteros rojos, cura al herido (mantén E) y lleva a los 3 al Refugio!',
+                '🌉 Misión 2: ¡Contrarreloj 90s! Las plataformas agrietadas caen al pisarlas. ¡No pares!',
+                '🏥 Misión 3: ¡Apagón total! Usa tu linterna y hackea los 3 generadores médicos.',
+                '🚚 Misión 4: ¡Adelántate al Convoy ONU y desactiva minas/barricadas antes de que choque!',
+                '📡 Misión 5: ¡Sube la torre antes de que te alcance el gas y sintoniza la radio en la cima!',
+                '🕊️ Misión 6: ¡Escolta a los 2 delegados, enciende las balizas y firma la paz en la mesa!'
+            ];
+            showBanner(briefings[idx]);
+        }
+
+        function backToMainMenu() {
+            ['end-modal', 'hack-modal', 'radio-modal', 'treaty-modal', 'howto-modal', 'comic-modal'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('touch-controls').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+            if (game) game.mode = 'menu';
+        }
+
+        /**
+         * ============================================================================
+         * 5. CONTROLES DE TECLADO Y PANTALLA TÁCTIL (INCLUYE MANTENER E PARA CURAR)
+         * ============================================================================
+         */
+        window.addEventListener('keydown', (e) => {
+            if (!game || game.mode !== 'playing') return;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') game.keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') game.keys.right = true;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
+                e.preventDefault();
+                doJump();
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                e.preventDefault();
+                doCrouchOrSlide();
+            }
+            if (e.key === 'e' || e.key === 'E' || e.key === 'Enter') {
+                if (!game.holdingAction) {
+                    game.holdingAction = true;
+                    triggerInstantAction();
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (!game || !game.keys) return;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') game.keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') game.keys.right = false;
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') game.keys.down = false;
+            if (e.key === 'e' || e.key === 'E' || e.key === 'Enter') game.holdingAction = false;
+        });
+
+        function bindTouch(id, downFn, upFn) {
+            const el = document.getElementById(id);
+            ['mousedown', 'touchstart'].forEach(ev => el.addEventListener(ev, (e) => {
+                e.preventDefault();
+                if (game && game.mode === 'playing') downFn();
+            }));
+            ['mouseup', 'mouseleave', 'touchend'].forEach(ev => el.addEventListener(ev, (e) => {
+                e.preventDefault();
+                if (game && game.keys) upFn();
+            }));
+        }
+
+        bindTouch('ctrl-left', () => game.keys.left = true, () => game.keys.left = false);
+        bindTouch('ctrl-right', () => game.keys.right = true, () => game.keys.right = false);
+        bindTouch('ctrl-crouch', () => doCrouchOrSlide(), () => game.keys.down = false);
+        bindTouch('ctrl-action', () => {
+            game.holdingAction = true;
+            triggerInstantAction();
+        }, () => {
+            game.holdingAction = false;
+        });
+
+        ['mousedown', 'touchstart'].forEach(ev => {
+            document.getElementById('ctrl-jump').addEventListener(ev, (e) => {
+                e.preventDefault();
+                if (game && game.mode === 'playing') doJump();
+            });
+        });
+
+        function doJump() {
+            const p = game.player;
+            if (p.jumpsLeft > 0) {
+                const isDouble = !p.grounded;
+                p.vy = isDouble ? p.jumpForce * 0.92 : p.jumpForce;
+                p.grounded = false;
+                p.crouching = false;
+                p.slideTimer = 0;
+                p.jumpsLeft--;
+                SoundFX.jump(isDouble);
+                spawnSparks(p.x, p.y, 10, isDouble ? '#34d399' : '#38bdf8');
+            }
+        }
+
+        function doCrouchOrSlide() {
+            const p = game.player;
+            game.keys.down = true;
+            if (p.grounded && (game.keys.left || game.keys.right) && p.slideTimer <= 0) {
+                p.slideTimer = selectedHero === 'tariq' ? 0.54 : 0.42;
+                SoundFX.slide();
+                spawnSparks(p.x, p.y + 4, 12, '#fbbf24');
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 6. INTERACCIONES INSTANTÁNEAS Y PROGRESIVAS (PRIMEROS AUXILIOS / MINIJUEGOS)
+         * ============================================================================
+         */
+        function triggerInstantAction() {
+            const m = game.missions[game.lvlIdx];
+            const p = game.player;
+
+            // 1. Civiles esperando
+            for (const civ of m.civilians) {
+                if (civ.state === 'waiting' && Math.abs(p.x - civ.x) < 75 && Math.abs(p.y - civ.y) < 75) {
+                    if (civ.injured && game.hero !== 'amara') {
+                        showBanner(`🩹 ${civ.name} está herido: ¡MANTÉN PULSADO E (o Acción) 1.2s para curarlo!`);
+                        return;
+                    }
+                    civ.injured = false;
+                    civ.healProgress = 1;
+                    civ.state = 'following';
+                    SoundFX.success();
+                    game.slowMo = 0.22;
+                    spawnSparks(civ.x, civ.y + 25, 18, '#34d399');
+                    if (game.hero === 'amara') game.hp = Math.min(game.maxHp, game.hp + 18);
+                    updateHUD();
+                    showBanner(`🤝 ¡${civ.name} te sigue! Guíalo al Refugio ONU.`);
+                    return;
+                }
+            }
+
+            // 2. Objetivos tácticos / Minijuegos
+            for (const obj of m.objectives) {
+                if (!obj.done && Math.abs(p.x - obj.x) < 85 && Math.abs(p.y - obj.y) < 85) {
+                    if (obj.hack) {
+                        openGeneratorHack(obj);
+                        return;
+                    }
+                    if (obj.radio) {
+                        openRadioTuner(obj);
+                        return;
+                    }
+                    if (obj.treaty) {
+                        const delegatesSafe = m.civilians.every(c => c.state === 'saved' || c.state === 'following');
+                        if (!delegatesSafe) {
+                            showBanner('⚠️ ¡Primero rescata y trae a los 2 delegados de paz a la mesa!');
+                            return;
+                        }
+                        openTreatyDiplomacy(obj);
+                        return;
+                    }
+
+                    // Desactivación instantánea (Malik o barricadas normales)
+                    if (obj.hazard && game.hero !== 'malik') {
+                        showBanner('💣 ¡Mantén pulsado E 0.9s para desactivar la mina con cuidado!');
+                        return;
+                    }
+                    obj.done = true;
+                    SoundFX.success();
+                    game.shake = 6;
+                    spawnSparks(obj.x, obj.y + 22, 18, '#38bdf8');
+                    updateHUD();
+                    showBanner(`✅ ${obj.label}`);
+                    return;
+                }
+            }
+        }
+
+        /**
+         * MINIJUEGO MISIÓN 3: HACKEO DE GENERADORES DEL HOSPITAL
+         */
+        let hackTimerId = null;
+        function openGeneratorHack(obj) {
+            game.mode = 'modal';
+            game.keys = { left: false, right: false, down: false };
+            game.holdingAction = false;
+            let nextNum = 1;
+            let timeLeft = game.hero === 'malik' ? 11.0 : (game.diff === 'extremo' ? 6.0 : 8.5);
+
+            const grid = document.getElementById('hack-grid');
+            const timerEl = document.getElementById('hack-timer');
+            grid.innerHTML = '';
+            timerEl.textContent = `⏱️ ${timeLeft.toFixed(1)}s`;
+
+            [1, 2, 3, 4, 5, 6].sort(() => Math.random() - 0.5).forEach(num => {
+                const btn = document.createElement('button');
+                btn.className = 'hack-node';
+                btn.textContent = num;
+                btn.onclick = () => {
+                    if (num === nextNum) {
+                        SoundFX.tone(400 + num * 80, 'sine', 0.08);
+                        btn.classList.add('done');
+                        btn.disabled = true;
+                        nextNum++;
+                        if (nextNum > 6) {
+                            clearInterval(hackTimerId);
+                            SoundFX.success();
+                            obj.done = true;
+                            spawnSparks(obj.x, obj.y + 25, 22, '#22d3ee');
+                            document.getElementById('hack-modal').classList.add('hidden');
+                            game.mode = 'playing';
+                            updateHUD();
+                            showBanner(`⚡ ¡${obj.label} restaurado! Aumenta la iluminación.`);
+                        }
+                    } else {
+                        SoundFX.alarm();
+                        timeLeft = Math.max(0.5, timeLeft - 1.3);
+                    }
+                };
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('hack-modal').classList.remove('hidden');
+            if (hackTimerId) clearInterval(hackTimerId);
+            hackTimerId = setInterval(() => {
+                timeLeft -= 0.1;
+                timerEl.textContent = `⏱️ ${Math.max(0, timeLeft).toFixed(1)}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(hackTimerId);
+                    SoundFX.alarm();
+                    document.getElementById('hack-modal').classList.add('hidden');
+                    game.mode = 'playing';
+                    takeDamageAndAlert(18, '⏱️ ¡Falló el hackeo del generador! Inténtalo de nuevo.');
+                }
+            }, 100);
+        }
+
+        /**
+         * MINIJUEGO MISIÓN 5: SINTONIZADOR DE ONDAS DE PAZ EN LA TORRE
+         */
+        let radioTargetFreq = 62;
+        let radioAnimId = null;
+        let currentRadioObj = null;
+
+        function openRadioTuner(obj) {
+            currentRadioObj = obj;
+            game.mode = 'modal';
+            game.keys = { left: false, right: false, down: false };
+            game.holdingAction = false;
+            radioTargetFreq = 25 + Math.floor(Math.random() * 55);
+            const slider = document.getElementById('wave-slider');
+            slider.value = 15;
+            document.getElementById('radio-modal').classList.remove('hidden');
+
+            const wCanvas = document.getElementById('waveCanvas');
+            const wCtx = wCanvas.getContext('2d');
+            let phase = 0;
+
+            function drawWaveLoop() {
+                if (document.getElementById('radio-modal').classList.contains('hidden')) return;
+                phase += 0.12;
+                const userVal = parseInt(slider.value, 10);
+                const diff = Math.abs(userVal - radioTargetFreq);
+                const match = Math.max(0, Math.round(100 - diff * 2.5));
+                document.getElementById('wave-status').textContent = `Sincronización: ${match}%`;
+
+                wCtx.fillStyle = '#050811';
+                wCtx.fillRect(0, 0, wCanvas.width, wCanvas.height);
+
+                // Onda objetivo (blanca)
+                wCtx.strokeStyle = 'rgba(255,255,255,0.45)';
+                wCtx.lineWidth = 2;
+                wCtx.beginPath();
+                for (let x = 0; x < wCanvas.width; x++) {
+                    const y = 55 + Math.sin(x * (radioTargetFreq / 650) + phase) * 32;
+                    if (x === 0) wCtx.moveTo(x, y); else wCtx.lineTo(x, y);
+                }
+                wCtx.stroke();
+
+                // Onda del jugador (verde/cian)
+                wCtx.strokeStyle = match >= 85 ? '#34d399' : '#38bdf8';
+                wCtx.lineWidth = 3;
+                wCtx.beginPath();
+                for (let x = 0; x < wCanvas.width; x++) {
+                    const y = 55 + Math.sin(x * (userVal / 650) + phase) * 32;
+                    if (x === 0) wCtx.moveTo(x, y); else wCtx.lineTo(x, y);
+                }
+                wCtx.stroke();
+
+                radioAnimId = requestAnimationFrame(drawWaveLoop);
+            }
+            drawWaveLoop();
+        }
+
+        function confirmRadioSignal() {
+            const userVal = parseInt(document.getElementById('wave-slider').value, 10);
+            if (Math.abs(userVal - radioTargetFreq) <= 6) {
+                SoundFX.success();
+                currentRadioObj.done = true;
+                document.getElementById('radio-modal').classList.add('hidden');
+                game.mode = 'playing';
+                updateHUD();
+                showBanner('📡 ¡Señal de Alto el Fuego transmitida! Reúnete en el helipuerto.');
+            } else {
+                SoundFX.alarm();
+                document.getElementById('wave-status').textContent = '❌ ¡Frecuencia desajustada! Mueve el deslizador.';
+            }
+        }
+
+        /**
+         * DIÁLOGO DIPLOMÁTICO MISIÓN 6: FIRMA DEL TRATADO
+         */
+        function openTreatyDiplomacy(obj) {
+            game.mode = 'modal';
+            game.keys = { left: false, right: false, down: false };
+            game.holdingAction = false;
+            const box = document.getElementById('treaty-choices');
+            box.innerHTML = '';
+
+            const options = [
+                {
+                    text: '🕊️ Alto el fuego inmediato, apertura de hospitales y comisión de verdad',
+                    ok: true
+                },
+                {
+                    text: '⚔️ Exigir rendición humillante sin garantías para los civiles',
+                    ok: false
+                }
+            ];
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'card-select';
+                btn.style.fontWeight = '800';
+                btn.style.fontSize = '13px';
+                btn.textContent = opt.text;
+                btn.onclick = () => {
+                    if (opt.ok) {
+                        SoundFX.success();
+                        obj.done = true;
+                        document.getElementById('treaty-modal').classList.add('hidden');
+                        game.mode = 'playing';
+                        updateHUD();
+                        completeCurrentMission();
+                    } else {
+                        SoundFX.alarm();
+                        document.getElementById('treaty-prompt').textContent =
+                            '⚠️ Esa postura rompe el diálogo. El ODS 16 requiere instituciones justas e inclusivas para todas las partes.';
+                    }
+                };
+                box.appendChild(btn);
+            });
+
+            document.getElementById('treaty-modal').classList.remove('hidden');
+        }
+
+        /**
+         * ============================================================================
+         * 7. SIMULACIÓN FÍSICA, PELIGROS TÁCTICOS Y BUCLE PRINCIPAL
+         * ============================================================================
+         */
+        function takeDamageAndAlert(dmg, msg) {
+            if (game.player.invuln > 0) return;
+            game.player.invuln = 1.35;
+            game.hp = Math.max(0, game.hp - dmg);
+            game.alert = Math.min(4, game.alert + 1);
+            game.alertDecay = 7.0;
+            game.totalAlerts++;
+            game.shake = 14;
+            SoundFX.alarm();
+            spawnSparks(game.player.x, game.player.y + 30, 16, '#f43f5e');
+            updateHUD();
+            if (msg) showBanner(msg);
+
+            if (game.hp <= 0) {
+                // Reintento instantáneo de la misión actual para mantener ritmo fluido
+                game.hp = game.maxHp;
+                setupMission(game.lvlIdx);
+                showBanner('🔄 Escudo agotado. Reintentando misión desde el punto de inserción.');
+            }
+        }
+
+        function update(rawDt) {
+            game.time += rawDt;
+            const dt = game.slowMo > 0 ? rawDt * 0.42 : rawDt;
+            if (game.slowMo > 0) game.slowMo = Math.max(0, game.slowMo - rawDt);
+            if (game.shake > 0) game.shake = Math.max(0, game.shake - rawDt * 38);
+
+            if (game.mode !== 'playing') return;
+
+            game.elapsed += dt;
+            const m = game.missions[game.lvlIdx];
+            const p = game.player;
+
+            if (p.invuln > 0) p.invuln -= dt;
+
+            // Enfriamiento gradual de estrellas de alerta
+            if (game.alert > 0) {
+                game.alertDecay -= dt;
+                if (game.alertDecay <= 0) {
+                    game.alert--;
+                    game.alertDecay = 6.0;
+                    updateHUD();
+                }
+            }
+
+            // Helicópteros y brasas
+            game.choppers.forEach(ch => {
+                ch.x += ch.speed * ch.dir * dt;
+                if (ch.x > m.worldW + 150) ch.dir = -1;
+                if (ch.x < -150) ch.dir = 1;
+            });
+            game.embers.forEach(em => {
+                em.x += em.vx * dt;
+                em.y -= em.vy * dt;
+                if (em.y < 0) {
+                    em.y = 580;
+                    em.x = game.camX + Math.random() * (canvas.width + 250);
+                }
+            });
+
+            // ---------------------------------------------------------------------
+            // ACCIÓN PROGRESIVA AL MANTENER E (PRIMEROS AUXILIOS O DESACTIVAR MINAS)
+            // ---------------------------------------------------------------------
+            if (game.holdingAction) {
+                // Curar civiles heridos
+                for (const civ of m.civilians) {
+                    if (civ.state === 'waiting' && civ.injured && Math.abs(p.x - civ.x) < 75 && Math.abs(p.y - civ.y) < 75) {
+                        civ.healProgress += dt / 1.2;
+                        if (Math.random() < 0.3) SoundFX.healTick();
+                        if (civ.healProgress >= 1) {
+                            civ.injured = false;
+                            civ.healProgress = 1;
+                            civ.state = 'following';
+                            SoundFX.success();
+                            spawnSparks(civ.x, civ.y + 25, 18, '#34d399');
+                            updateHUD();
+                            showBanner(`🩹 ¡${civ.name} estabilizado y en marcha!`);
+                        }
+                    }
+                }
+                // Desactivar minas/peligros
+                for (const obj of m.objectives) {
+                    if (!obj.done && obj.hazard && Math.abs(p.x - obj.x) < 80 && Math.abs(p.y - obj.y) < 80) {
+                        obj.defuse = (obj.defuse || 0) + dt / 0.9;
+                        if (Math.random() < 0.3) SoundFX.healTick();
+                        if (obj.defuse >= 1) {
+                            obj.done = true;
+                            SoundFX.success();
+                            spawnSparks(obj.x, obj.y + 20, 18, '#38bdf8');
+                            updateHUD();
+                            showBanner(`✅ ${obj.label}`);
+                        }
+                    }
+                }
+            }
+
+            // Agacharse / Deslizarse
+            if (p.slideTimer > 0) {
+                p.slideTimer -= dt;
+                p.crouching = true;
+                if (Math.random() < 0.5) spawnSparks(p.x, p.y + 3, 1, '#fbbf24');
+            } else {
+                p.crouching = game.keys.down && p.grounded;
+            }
+            p.h = p.crouching ? p.crouchH : p.normalH;
+
+            // Movimiento lateral
+            let spd = p.speed;
+            if (p.slideTimer > 0) spd *= 1.44;
+            else if (p.crouching) spd *= 0.55;
+
+            let moving = false;
+            if (p.slideTimer > 0) {
+                p.x += p.facing * spd * dt;
+                moving = true;
+            } else {
+                if (game.keys.left) { p.x -= spd * dt; p.facing = -1; moving = true; }
+                if (game.keys.right) { p.x += spd * dt; p.facing = 1; moving = true; }
+            }
+            p.x = Math.max(30, Math.min(m.worldW - 30, p.x));
+            p.walkAnim = moving && p.grounded && !p.crouching ? p.walkAnim + dt * 14 : 0;
+
+            // Pañuelo azul de paz
+            p.scarf.unshift({ x: p.x - p.facing * 6, y: p.y + p.h - 16 });
+            if (p.scarf.length > 9) p.scarf.pop();
+            p.scarf.forEach((pt, i) => {
+                pt.x -= p.facing * 32 * dt;
+                pt.y += Math.sin(game.time * 10 + i) * 16 * dt;
+            });
+
+            // Gravedad y Salto
+            const prevY = p.y;
+            if (!p.grounded) {
+                p.y += p.vy * dt;
+                p.vy -= p.gravity * dt;
+            }
+
+            // Plataformas (incluye plataformas que tiemblan y caen en Misión 2)
+            let landed = false;
+            if (m.platforms) {
+                m.platforms.forEach(pl => {
+                    if (pl.crumbling && pl.fallen) {
+                        pl.respawn -= dt;
+                        if (pl.respawn <= 0) {
+                            pl.fallen = false;
+                            pl.timer = 0;
+                        }
+                        return;
+                    }
+                    if (!pl.fallen && p.vy <= 0) {
+                        const inX = p.x + 12 > pl.x && p.x - 12 < pl.x + pl.w;
+                        if (inX && prevY >= pl.y && p.y <= pl.y) {
+                            p.y = pl.y;
+                            p.vy = 0;
+                            p.grounded = true;
+                            p.jumpsLeft = 2;
+                            landed = true;
+                            if (pl.crumbling && pl.timer === 0) pl.timer = 0.01;
+                        }
+                    }
+                    if (pl.crumbling && pl.timer > 0 && !pl.fallen) {
+                        pl.timer += dt;
+                        if (pl.timer >= 0.72) {
+                            pl.fallen = true;
+                            pl.respawn = 3.2;
+                            SoundFX.explosion();
+                            spawnSparks(pl.x + pl.w / 2, pl.y, 14, '#38bdf8');
+                        }
+                    }
+                });
+            }
+
+            if (p.grounded && p.y > 0 && !landed && m.platforms) {
+                const supported = m.platforms.some(pl =>
+                    !pl.fallen && p.x + 12 > pl.x && p.x - 12 < pl.x + pl.w && Math.abs(p.y - pl.y) < 4
+                );
+                if (!supported) p.grounded = false;
+            }
+
+            // Suelo o abismos (Misión 2)
+            if (p.y <= 0) {
+                const inGap = m.gaps && m.gaps.some(g => p.x > g.x1 + 10 && p.x < g.x2 - 10);
+                if (inGap) {
+                    takeDamageAndAlert(22, '🌊 ¡Caíste del puente colapsado! Usa doble salto.');
+                    p.x = Math.max(60, p.x - 120);
+                    p.y = 70;
+                    p.vy = 0;
+                } else {
+                    p.y = 0;
+                    p.vy = 0;
+                    p.grounded = true;
+                    p.jumpsLeft = 2;
+                }
+            }
+
+            // ---------------------------------------------------------------------
+            // MORTEROS ANUNCIADOS (MISIONES 1 Y 6)
+            // ---------------------------------------------------------------------
+            if (m.mortarRate) {
+                game.mortarTimer -= dt;
+                if (game.mortarTimer <= 0) {
+                    game.mortarTimer = m.mortarRate;
+                    const targetX = Math.max(180, Math.min(m.worldW - 220, p.x + (Math.random() - 0.3) * 260));
+                    game.mortars.push({ x: targetX, timer: 1.8, maxTimer: 1.8 });
+                    SoundFX.mortarWarn();
+                }
+            }
+            game.mortars.forEach(mt => {
+                mt.timer -= dt;
+                if (mt.timer <= 0) {
+                    SoundFX.explosion();
+                    game.shake = 16;
+                    spawnSparks(mt.x, 12, 26, '#fb923c');
+                    if (Math.abs(p.x - mt.x) < 58 && p.y < 65) {
+                        takeDamageAndAlert(26, '💥 ¡Impacto de mortero! Corre fuera de la zona roja.');
+                    }
+                }
+            });
+            game.mortars = game.mortars.filter(mt => mt.timer > 0);
+
+            // ---------------------------------------------------------------------
+            // DRONES CON DOBLE PATRÓN (BAJO -> SALTAR / MEDIO -> AGACHARSE)
+            // ---------------------------------------------------------------------
+            const alertSpeedBoost = 1 + game.alert * 0.16;
+            if (m.drones) {
+                m.drones.forEach(d => {
+                    d.x += d.speed * alertSpeedBoost * d.dir * dt;
+                    if (d.x > d.maxX) { d.x = d.maxX; d.dir = -1; }
+                    if (d.x < d.minX) { d.x = d.minX; d.dir = 1; }
+
+                    if (Math.abs(p.x - d.x) < 26) {
+                        if (d.pattern === 'mid' && !p.crouching && p.y < 95) {
+                            takeDamageAndAlert(18, '👁️ ¡Dron medio! Agáchate o deslízate (⬇️) bajo su haz.');
+                        } else if (d.pattern === 'low' && p.y < 36) {
+                            takeDamageAndAlert(18, '⚡ ¡Dron rasante! Salta por encima de él (⬆️).');
+                        }
+                    }
+                });
+            }
+
+            // ---------------------------------------------------------------------
+            // TORRETAS LÁSER SINCRONIZADAS (MISIONES 3, 5 Y 6)
+            // ---------------------------------------------------------------------
+            if (m.turrets) {
+                m.turrets.forEach(t => {
+                    const cycle = (game.time + t.phase) % t.period;
+                    t.active = cycle < t.period * 0.48;
+                    if (t.active && Math.abs(p.x - t.x) < 16 && p.y + p.h > t.y && p.y < t.y + t.h) {
+                        takeDamageAndAlert(22, '🚨 ¡Láser de vigilancia! Espera a que parpadee.');
+                        p.vy = 240;
+                    }
+                });
+            }
+
+            // ---------------------------------------------------------------------
+            // MECÁNICAS ESPECÍFICAS DE MISIÓN 2 (RELOJ), 4 (CONVOY) Y 5 (GAS VERTICAL)
+            // ---------------------------------------------------------------------
+            if (m.type === 'bridge') {
+                m.timeLimit -= dt;
+                updateHUD();
+                if (m.timeLimit <= 0) {
+                    m.timeLimit = game.diff === 'extremo' ? 75 : 90;
+                    setupMission(game.lvlIdx);
+                    showBanner('⏱️ ¡Se acabó el tiempo del puente! Reintentando.');
+                    return;
+                }
+            } else if (m.type === 'convoy') {
+                const blocker = m.objectives.find(o => !o.done && Math.abs(o.x - (m.convoyX + 55)) < 48);
+                if (blocker) {
+                    // El camión sufre daño si choca con una mina o barricada activa
+                    m.convoyHp = Math.max(0, m.convoyHp - 18 * dt);
+                    updateHUD();
+                    if (m.convoyHp <= 0) {
+                        m.convoyHp = 100;
+                        m.convoyX = 140;
+                        setupMission(game.lvlIdx);
+                        showBanner('🚚 ¡El Convoy sufrió demasiados daños! Reintentando escolta.');
+                        return;
+                    }
+                } else if (m.convoyX < m.shelterX - 95) {
+                    m.convoyX += m.convoySpeed * dt;
+                }
+            } else if (m.type === 'tower') {
+                m.gasY += m.gasSpeed * dt;
+                if (p.y < m.gasY) {
+                    takeDamageAndAlert(25, '☣️ ¡El gas tóxico sube! Escala rápido hacia la azotea.');
+                    p.y = m.gasY + 45;
+                    p.vy = 320;
+                }
+            }
+
+            // ---------------------------------------------------------------------
+            // ESCOLTA DE CIVILES RESCATADOS HACIA EL REFUGIO
+            // ---------------------------------------------------------------------
+            const targetShelterX = m.shelterX;
+            const targetShelterY = m.shelterY || 0;
+            let followSlot = 0;
+            m.civilians.forEach(civ => {
+                if (civ.state === 'following') {
+                    followSlot++;
+                    const tx = p.x - p.facing * (36 * followSlot);
+                    const dx = tx - civ.x;
+                    if (Math.abs(dx) > 6) civ.x += Math.sign(dx) * Math.min(Math.abs(dx), 320 * dt);
+                    civ.y += (p.y - civ.y) * 9 * dt;
+
+                    if (Math.abs(civ.x - targetShelterX) < 85 && Math.abs(civ.y - targetShelterY) < 85) {
+                        civ.state = 'saved';
+                        game.totalSaved++;
+                        SoundFX.success();
+                        spawnSparks(targetShelterX, targetShelterY + 35, 22, '#34d399');
+                        updateHUD();
+                        showBanner(`🕊️ ¡${civ.name} está a salvo!`);
+                    }
+                }
+            });
+
+            // Comprobar victoria de la misión
+            const allSaved = m.civilians.every(c => c.state === 'saved');
+            const allObjs = m.objectives.every(o => o.done);
+            const convoyArrived = m.type !== 'convoy' || m.convoyX >= m.shelterX - 110;
+            const heroAtGoal = Math.abs(p.x - targetShelterX) < 90 && Math.abs(p.y - targetShelterY) < 90;
+
+            if (allSaved && allObjs && convoyArrived && heroAtGoal) {
+                completeCurrentMission();
+            } else if (heroAtGoal && (!allSaved || !allObjs || !convoyArrived)) {
+                showBanner('⚠️ Aún faltan personas por rescatar u objetivos por completar.');
+            }
+
+            // Partículas y Cámara
+            game.particles.forEach(pt => { pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.life -= dt; });
+            game.particles = game.particles.filter(pt => pt.life > 0);
+
+            const targetCamX = p.x - canvas.width * 0.38;
+            const maxCamX = Math.max(0, m.worldW - canvas.width);
+            game.camX += (Math.max(0, Math.min(maxCamX, targetCamX)) - game.camX) * 8 * dt;
+
+            const targetCamY = m.type === 'tower' ? Math.max(0, p.y - canvas.height * 0.38) : 0;
+            game.camY += (targetCamY - game.camY) * 7 * dt;
+        }
+
+        function spawnSparks(x, y, count, color) {
+            for (let i = 0; i < count; i++) {
+                game.particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 180,
+                    vy: Math.random() * 140 + 20,
+                    size: 2 + Math.random() * 3.5,
+                    color,
+                    life: 0.45
+                });
+            }
+        }
+
+        function completeCurrentMission() {
+            game.mode = 'summary';
+            SoundFX.success();
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('touch-controls').classList.add('hidden');
+
+            const m = game.missions[game.lvlIdx];
+            const mins = String(Math.floor(game.elapsed / 60)).padStart(2, '0');
+            const secs = String(Math.floor(game.elapsed % 60)).padStart(2, '0');
+            const hpPct = Math.round((game.hp / game.maxHp) * 100);
+
+            let rank = 'RANGO S · HÉROE DE LA PAZ 🏆';
+            if (game.totalAlerts >= 4 || hpPct < 35) rank = 'RANGO C · SUPERVIVIENTE 🛡️';
+            else if (game.totalAlerts >= 2 || hpPct < 65) rank = 'RANGO B · RESCATISTA 🎖️';
+            else if (game.totalAlerts === 1) rank = 'RANGO A · GUARDIÁN HUMANITARIO 🥈';
+
+            document.getElementById('end-rank').textContent = rank;
+            document.getElementById('end-title').textContent = `¡${m.name.toUpperCase()} SUPERADA!`;
+            document.getElementById('stat-saved').textContent = `${m.civilians.length}/${m.civilians.length}`;
+            document.getElementById('stat-time').textContent = `${mins}:${secs}`;
+            document.getElementById('stat-alerts').textContent = game.totalAlerts;
+            document.getElementById('stat-hp').textContent = `${hpPct}%`;
+            document.getElementById('end-ods-lesson').innerHTML = `🇺🇳 <strong>${m.odsLesson}</strong>`;
+
+            const nextBtn = document.getElementById('btn-next-mission');
+            if (campaignMode && game.lvlIdx < game.missions.length - 1) {
+                nextBtn.classList.remove('hidden');
+                nextBtn.textContent = `➡️ SIGUIENTE: MISIÓN ${game.lvlIdx + 2}`;
+            } else {
+                nextBtn.classList.add('hidden');
+                if (campaignMode) {
+                    document.getElementById('end-title').textContent = '¡CAMPAÑA DE PAZ COMPLETADA!';
+                }
+            }
+
+            document.getElementById('end-modal').classList.remove('hidden');
+        }
+
+        function proceedNextMission() {
+            document.getElementById('end-modal').classList.add('hidden');
+            game.mode = 'playing';
+            game.hp = game.maxHp;
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('touch-controls').classList.remove('hidden');
+            setupMission(game.lvlIdx + 1);
+        }
+
+        /**
+         * ============================================================================
+         * 8. RENDERIZADO 2.5D CINEMATOGRÁFICO (PARALLAX, REFLEJOS, LINTERNA Y HÉROES)
+         * ============================================================================
+         */
+        function render() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const groundY = h * 0.81;
+            const m = game.missions[game.lvlIdx];
+
+            ctx.save();
+            if (game.shake > 0) {
+                ctx.translate((Math.random() - 0.5) * game.shake, (Math.random() - 0.5) * game.shake);
+            }
+
+            // 1. Cielo Atmosférico
+            const sky = ctx.createLinearGradient(0, 0, 0, groundY);
+            sky.addColorStop(0, m.sky[0]);
+            sky.addColorStop(0.55, m.sky[1]);
+            sky.addColorStop(1, m.sky[2]);
+            ctx.fillStyle = sky;
+            ctx.fillRect(0, 0, w, h);
+
+            // 2. Helicópteros con reflectores
+            game.choppers.forEach(ch => {
+                const cx = ch.x - game.camX * 0.25;
+                if (cx < -120 || cx > w + 120) return;
+                const beam = ctx.createLinearGradient(cx, ch.y, cx + ch.dir * 60, groundY);
+                beam.addColorStop(0, 'rgba(254, 240, 138, 0.2)');
+                beam.addColorStop(1, 'rgba(254, 240, 138, 0)');
+                ctx.fillStyle = beam;
+                ctx.beginPath();
+                ctx.moveTo(cx - 6, ch.y + 6); ctx.lineTo(cx + 6, ch.y + 6);
+                ctx.lineTo(cx + ch.dir * 110, groundY); ctx.lineTo(cx + ch.dir * 20, groundY);
+                ctx.closePath(); ctx.fill();
+
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath(); ctx.ellipse(cx, ch.y, 22, 8, 0, 0, Math.PI * 2); ctx.fill();
+                const rotor = Math.sin(game.time * 45) * 30;
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(cx - rotor, ch.y - 10); ctx.lineTo(cx + rotor, ch.y - 10); ctx.stroke();
+            });
+
+            // 3. Edificios destruidos en Parallax
+            for (let bx = -100; bx < m.worldW + 250; bx += 145) {
+                const sx = bx - game.camX * 0.35;
+                if (sx < -160 || sx > w + 160) continue;
+                const bh = 125 + ((bx * 19) % 145);
+                const by = groundY - bh + game.camY * 0.25;
+
+                ctx.fillStyle = '#070b14';
+                ctx.beginPath();
+                ctx.moveTo(sx, groundY + 200);
+                ctx.lineTo(sx, by + 18);
+                ctx.lineTo(sx + 35, by);
+                ctx.lineTo(sx + 75, by + 24);
+                ctx.lineTo(sx + 115, by + 6);
+                ctx.lineTo(sx + 115, groundY + 200);
+                ctx.closePath();
+                ctx.fill();
+
+                if (bx % 290 === 0) {
+                    const fl = 0.35 + Math.sin(game.time * 12 + bx) * 0.25;
+                    ctx.fillStyle = `rgba(251, 146, 60, ${fl})`;
+                    ctx.fillRect(sx + 25, by + 45, 16, 22);
+                }
+            }
+
+            // =====================================================================
+            // MUNDO 2.5D (TRASLACIÓN DE CÁMARA)
+            // =====================================================================
+            ctx.save();
+            ctx.translate(-game.camX, game.camY);
+
+            // Suelo y reflejos en charcos
+            ctx.fillStyle = '#040711';
+            ctx.fillRect(0, groundY, m.worldW, h - groundY + 300);
+            ctx.fillStyle = m.accent;
+            ctx.fillRect(0, groundY, m.worldW, 4);
+
+            // Abismos en Misión 2
+            if (m.gaps) {
+                m.gaps.forEach(g => {
+                    ctx.fillStyle = '#020617';
+                    ctx.fillRect(g.x1, groundY - 2, g.x2 - g.x1, h - groundY + 20);
+                    ctx.fillStyle = '#ea580c';
+                    ctx.fillRect(g.x1, groundY + 24, g.x2 - g.x1, 14);
+                });
+            }
+
+            for (let px = 150; px < m.worldW; px += 310) {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
+                ctx.beginPath(); ctx.ellipse(px, groundY + 24, 62, 8, 0, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // Plataformas (con temblor si son crumbling)
+            if (m.platforms) {
+                m.platforms.forEach(pl => {
+                    if (pl.fallen) return;
+                    const shakeX = pl.crumbling && pl.timer > 0 ? (Math.random() - 0.5) * 6 : 0;
+                    const py = groundY - pl.y;
+                    ctx.fillStyle = pl.crumbling ? '#1e1b4b' : '#0f172a';
+                    ctx.beginPath(); ctx.roundRect(pl.x + shakeX, py, pl.w, pl.h, 6); ctx.fill();
+                    ctx.strokeStyle = pl.crumbling ? '#f43f5e' : m.accent;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+            }
+
+            // Marcadores de Mortero Parpadeantes
+            game.mortars.forEach(mt => {
+                const ratio = 1 - mt.timer / mt.maxTimer;
+                ctx.fillStyle = `rgba(244, 63, 94, ${0.25 + ratio * 0.45})`;
+                ctx.beginPath(); ctx.ellipse(mt.x, groundY - 2, 54, 10, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#fda4af';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.font = '20px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText('⚠️', mt.x, groundY - 18 - Math.sin(game.time * 20) * 5);
+            });
+
+            // Torretas Láser Rítmicas
+            if (m.turrets) {
+                m.turrets.forEach(t => {
+                    const ty = groundY - t.y - t.h;
+                    if (t.active) {
+                        ctx.strokeStyle = '#f43f5e';
+                        ctx.lineWidth = 5;
+                        ctx.beginPath(); ctx.moveTo(t.x, ty); ctx.lineTo(t.x, ty + t.h); ctx.stroke();
+                    } else {
+                        ctx.strokeStyle = 'rgba(244, 63, 94, 0.22)';
+                        ctx.setLineDash([5, 5]);
+                        ctx.beginPath(); ctx.moveTo(t.x, ty); ctx.lineTo(t.x, ty + t.h); ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                });
+            }
+
+            // Convoy Humanitario Blanco (Misión 4)
+            if (m.type === 'convoy') {
+                const cx = m.convoyX;
+                ctx.fillStyle = '#f8fafc';
+                ctx.beginPath(); ctx.roundRect(cx, groundY - 58, 98, 48, 10); ctx.fill();
+                ctx.fillStyle = '#0284c7';
+                ctx.fillRect(cx + 8, groundY - 40, 82, 12);
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.arc(cx + 22, groundY - 8, 11, 0, Math.PI * 2);
+                ctx.arc(cx + 74, groundY - 8, 11, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#0284c7';
+                ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText('🇺🇳 CONVOY ONU', cx + 49, groundY - 30);
+            }
+
+            // Objetivos (Minas, Barricadas, Generadores, Balizas, Mesa de Paz)
+            m.objectives.forEach(obj => {
+                const oy = groundY - obj.y;
+                if (obj.done && obj.icon === '🕊️') {
+                    const beam = ctx.createLinearGradient(obj.x, oy, obj.x, 0);
+                    beam.addColorStop(0, 'rgba(56, 189, 248, 0.65)');
+                    beam.addColorStop(1, 'rgba(56, 189, 248, 0)');
+                    ctx.fillStyle = beam;
+                    ctx.fillRect(obj.x - 14, 0, 28, oy);
+                }
+                if (!obj.done || obj.icon === '🕊️' || obj.treaty) {
+                    ctx.font = '30px sans-serif'; ctx.textAlign = 'center';
+                    ctx.fillText(obj.done && obj.hack ? '✅' : obj.icon, obj.x, oy - 12);
+                }
+            });
+
+            // Zona de Evacuación / Refugio ONU / Helipuerto
+            const sx = m.shelterX;
+            const sy = groundY - (m.shelterY || 0);
+            const glow = ctx.createRadialGradient(sx, sy - 50, 10, sx, sy - 50, 95);
+            glow.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
+            glow.addColorStop(1, 'rgba(56, 189, 248, 0)');
+            ctx.fillStyle = glow;
+            ctx.beginPath(); ctx.arc(sx, sy - 50, 95, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.moveTo(sx - 44, sy); ctx.lineTo(sx, sy - 80); ctx.lineTo(sx + 44, sy);
+            ctx.closePath(); ctx.fill();
+            ctx.font = '26px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText('🇺🇳', sx, sy - 86);
+            ctx.fillStyle = '#7dd3fc';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillText('ZONA SEGURA', sx, sy - 12);
+
+            // Civiles / Delegados (con barra de curación si están heridos)
+            m.civilians.forEach(civ => {
+                if (civ.state === 'saved') return;
+                const cy = groundY - civ.y;
+                ctx.font = '30px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(civ.emoji, civ.x, cy - 10);
+
+                if (civ.state === 'waiting') {
+                    ctx.fillStyle = civ.injured ? '#f43f5e' : '#10b981';
+                    ctx.beginPath(); ctx.roundRect(civ.x - 46, cy - 64, 92, 20, 9); ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 10px sans-serif';
+                    ctx.fillText(civ.injured ? '🩹 Mantén E' : '🤝 ¡Ayúdame!', civ.x, cy - 50);
+
+                    if (civ.injured && civ.healProgress > 0) {
+                        ctx.fillStyle = '#0f172a';
+                        ctx.fillRect(civ.x - 36, cy - 72, 72, 5);
+                        ctx.fillStyle = '#34d399';
+                        ctx.fillRect(civ.x - 36, cy - 72, 72 * civ.healProgress, 5);
+                    }
+                }
+            });
+
+            // Drones con doble patrón (mid = alto para agachar, low = rasante para saltar)
+            if (m.drones) {
+                m.drones.forEach(d => {
+                    const baseH = d.pattern === 'low' ? 32 : 128;
+                    const dy = groundY - baseH + Math.sin(game.time * 5) * 4;
+                    if (d.pattern === 'mid') {
+                        const beam = ctx.createLinearGradient(d.x, dy + 8, d.x, groundY - 38);
+                        beam.addColorStop(0, 'rgba(244, 63, 94, 0.52)');
+                        beam.addColorStop(1, 'rgba(244, 63, 94, 0.06)');
+                        ctx.fillStyle = beam;
+                        ctx.beginPath();
+                        ctx.moveTo(d.x - 8, dy + 8); ctx.lineTo(d.x + 8, dy + 8);
+                        ctx.lineTo(d.x + 34, groundY - 38); ctx.lineTo(d.x - 34, groundY - 38);
+                        ctx.closePath(); ctx.fill();
+                    }
+                    ctx.fillStyle = '#1e293b';
+                    ctx.beginPath(); ctx.roundRect(d.x - 20, dy - 9, 40, 18, 9); ctx.fill();
+                    ctx.strokeStyle = d.pattern === 'low' ? '#fbbf24' : '#f43f5e';
+                    ctx.stroke();
+                });
+            }
+
+            // Gas ascendente en Misión 5 (Torre de Radio)
+            if (m.type === 'tower') {
+                const gy = groundY - m.gasY;
+                const gasGrad = ctx.createLinearGradient(0, gy - 40, 0, gy + 260);
+                gasGrad.addColorStop(0, 'rgba(163, 230, 53, 0)');
+                gasGrad.addColorStop(0.25, 'rgba(132, 204, 22, 0.55)');
+                gasGrad.addColorStop(1, 'rgba(63, 98, 18, 0.92)');
+                ctx.fillStyle = gasGrad;
+                ctx.fillRect(0, gy - 40, m.worldW, 600);
+            }
+
+            // Partículas y Héroe de piel marrón
+            game.particles.forEach(pt => {
+                ctx.fillStyle = pt.color;
+                ctx.globalAlpha = Math.max(0, pt.life * 2);
+                ctx.beginPath(); ctx.arc(pt.x, groundY - pt.y, pt.size, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            drawBrownHero(game.player, groundY, game.hero);
+
+            if (m.ash) {
+                game.embers.forEach(em => {
+                    ctx.fillStyle = em.hot ? 'rgba(251, 146, 60, 0.65)' : 'rgba(203, 213, 225, 0.32)';
+                    ctx.beginPath(); ctx.arc(em.x, groundY - em.y, em.r, 0, Math.PI * 2); ctx.fill();
+                });
+            }
+
+            ctx.restore();
+
+            // Oscuridad con Linterna Direccional (Misión 3: Hospital)
+            if (m.dark) {
+                const hx = game.player.x - game.camX;
+                const hy = groundY - game.player.y - 36;
+                const litGens = m.objectives.filter(o => o.done).length;
+                const radius = 210 + litGens * 130;
+                const darkGrad = ctx.createRadialGradient(hx + game.player.facing * 45, hy, 60, hx, hy, radius);
+                darkGrad.addColorStop(0, 'rgba(2, 6, 23, 0)');
+                darkGrad.addColorStop(1, litGens === 3 ? 'rgba(2, 6, 23, 0.25)' : 'rgba(2, 6, 23, 0.94)');
+                ctx.fillStyle = darkGrad;
+                ctx.fillRect(0, 0, w, h);
+            }
+
+            ctx.restore();
+        }
+
+        function drawBrownHero(p, groundY, heroId) {
+            if (p.invuln > 0 && Math.floor(p.invuln * 16) % 2 === 0) return;
+            const feetY = groundY - p.y;
+            const swing = p.grounded ? Math.sin(p.walkAnim) * 8 : 6;
+
+            // Pañuelo azul de paz
+            if (p.scarf.length > 1) {
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 5;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                p.scarf.forEach((pt, i) => {
+                    const sy = groundY - pt.y;
+                    if (i === 0) ctx.moveTo(pt.x, sy); else ctx.lineTo(pt.x, sy);
+                });
+                ctx.stroke();
+            }
+
+            ctx.save();
+            ctx.translate(p.x, feetY);
+            ctx.scale(p.facing, 1);
+
+            const skinTone = heroId === 'amara' ? '#7c4728' : heroId === 'malik' ? '#6b3e26' : '#8d5524';
+            const jacketColor = heroId === 'amara' ? '#10b981' : heroId === 'malik' ? '#0284c7' : '#d97706';
+
+            if (p.crouching) {
+                ctx.fillStyle = '#f8fafc';
+                ctx.beginPath(); ctx.roundRect(-18, -30, 11, 15, 4); ctx.fill();
+                ctx.fillStyle = jacketColor;
+                ctx.beginPath(); ctx.roundRect(-14, -32, 30, 20, 8); ctx.fill();
+                ctx.fillStyle = skinTone;
+                ctx.beginPath(); ctx.arc(8, -24, 9.5, 0, Math.PI * 2); ctx.fill();
+            } else {
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.roundRect(-8 + swing, -25, 7, 25, 3.5);
+                ctx.roundRect(1 - swing, -25, 7, 25, 3.5);
+                ctx.fill();
+
+                ctx.fillStyle = '#f8fafc';
+                ctx.beginPath(); ctx.roundRect(-18, -52, 9, 23, 4); ctx.fill();
+                ctx.fillStyle = '#0284c7';
+                ctx.fillRect(-15, -44, 3, 8);
+
+                ctx.fillStyle = jacketColor;
+                ctx.beginPath(); ctx.roundRect(-12, -54, 24, 30, 7); ctx.fill();
+
+                ctx.fillStyle = skinTone;
+                ctx.beginPath(); ctx.arc(0, -64, 11.5, 0, Math.PI * 2); ctx.fill();
+
+                ctx.fillStyle = '#1c1917';
+                ctx.beginPath(); ctx.arc(-1, -67, 11.8, Math.PI * 0.88, Math.PI * 2.12); ctx.fill();
+
+                ctx.fillStyle = '#090d16';
+                ctx.beginPath(); ctx.arc(5, -64, 2, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        /**
+         * ============================================================================
+         * 9. HUD Y BUCLE PRINCIPAL
+         * ============================================================================
+         */
+        function updateHUD() {
+            const m = game.missions[game.lvlIdx];
+            const icons = { tariq: '🏃🏽‍♂️', amara: '👩🏽‍⚕️', malik: '👨🏽‍🔧' };
+            document.getElementById('hud-hero-icon').textContent = icons[game.hero];
+            document.getElementById('hud-lvl-num').textContent = m.id;
+            document.getElementById('hud-diff-tag').textContent = game.diff.toUpperCase();
+            document.getElementById('hud-lvl-name').textContent = m.name;
+
+            const saved = m.civilians.filter(c => c.state === 'saved').length;
+            const fol = m.civilians.filter(c => c.state === 'following').length;
+            document.getElementById('hud-civ-text').textContent = `${saved}/${m.civilians.length}` + (fol > 0 ? ` (+${fol})` : '');
+
+            const doneObjs = m.objectives.filter(o => o.done).length;
+            document.getElementById('hud-obj-icon').textContent = m.objIcon;
+            document.getElementById('hud-obj-text').textContent = `${doneObjs}/${m.objectives.length}`;
+
+            // Temporizador Misión 2
+            const timerPill = document.getElementById('hud-timer-pill');
+            if (m.type === 'bridge') {
+                timerPill.classList.remove('hidden');
+                document.getElementById('hud-timer-text').textContent = `${Math.ceil(m.timeLimit)}s`;
+            } else {
+                timerPill.classList.add('hidden');
+            }
+
+            // Integridad Convoy Misión 4
+            const convoyBar = document.getElementById('hud-convoy-bar');
+            if (m.type === 'convoy') {
+                convoyBar.classList.remove('hidden');
+                document.getElementById('hud-convoy-val').textContent = `${Math.round(m.convoyHp)}%`;
+                document.getElementById('hud-convoy-fill').style.width = `${Math.max(0, m.convoyHp)}%`;
+            } else {
+                convoyBar.classList.add('hidden');
+            }
+
+            const hpPct = Math.round((game.hp / game.maxHp) * 100);
+            document.getElementById('hud-hp-val').textContent = `${hpPct}%`;
+            document.getElementById('hud-hp-fill').style.width = `${Math.max(4, hpPct)}%`;
+
+            const aBox = document.getElementById('hud-alert-box');
+            aBox.classList.toggle('alert-glow', game.alert > 0);
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`alert-${i}`).style.opacity = i <= game.alert ? '1' : '0.2';
+            }
+        }
+
+        let bannerTimer = null;
+        function showBanner(msg) {
+            const b = document.getElementById('banner-msg');
+            b.textContent = msg;
+            b.classList.remove('hidden');
+            clearTimeout(bannerTimer);
+            bannerTimer = setTimeout(() => b.classList.add('hidden'), 3400);
+        }
+
+        let lastTs = 0;
+        function mainLoop(ts) {
+            const dt = Math.min((ts - lastTs) / 1000, 0.08);
+            lastTs = ts;
+            if (game && game.missions) {
+                update(dt);
+                render();
+            }
+            requestAnimationFrame(mainLoop);
+        }
+
+        window.onload = () => {
+            resizeCanvas();
+            game = createGame(0);
+            game.mode = 'menu';
+            requestAnimationFrame(mainLoop);
+        };
+    </script>
+</body>
+</html>
